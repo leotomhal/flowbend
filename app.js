@@ -52,17 +52,15 @@ async function initApp() {
       : "Keine Daten verfuegbar – bitte einmal online laden";
   }
   renderDashboardFromDB(); buildAreaUI(); updateStreak();
-  if (!localStorage.getItem("fb_disclaimer_ack")) showDisclaimer(); // Erststart-Hinweis
 }
 
-// Medizinischer Hinweis / Disclaimer.
+// Medizinischer Hinweis / Disclaimer – nur über den Footer-Link erreichbar, kein Zwangshinweis.
 function showDisclaimer() {
   document.getElementById("dashboard-view").style.display = "none";
   document.getElementById("player-view").style.display = "none";
   document.getElementById("disclaimer-view").style.display = "flex";
 }
-function ackDisclaimer() {
-  localStorage.setItem("fb_disclaimer_ack", "1");
+function hideDisclaimer() {
   document.getElementById("disclaimer-view").style.display = "none";
   document.getElementById("dashboard-view").style.display = "flex";
 }

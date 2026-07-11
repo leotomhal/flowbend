@@ -52,7 +52,7 @@ data/routines.json  15 kuratierte Routinen
 vendor/dexie.min.js IndexedDB-Wrapper (lokal gevendored, kein CDN)
 img/                Pose-Bilder (img/<id>.png) + App-Icon
 docs/handover.md    Ausführliche Architektur- & Datendoku
-docs/uebungen.md    Alle 58 Übungen mit Beschreibung + Bild-Checkliste
+docs/uebungen.md    Alle 58 Übungen mit Beschreibung
 tools/check-poses.py     Abgleich: welche Pose-Bilder fehlen noch?
 tools/optimize-images.sh Bilder lokal verkleinern/komprimieren (en Block)
 ```
