@@ -1,0 +1,27 @@
+name: Build Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write   # nötig, damit action-gh-release das Release/Asset schreiben darf
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build deploy package
+        run: |
+          # Nur die lauffähigen Dateien ins ZIP – keine Doku, kein .github,
+          # kein Deploy-Script, keine Lizenz. So bleibt das Update schlank
+          # und update-check.php überschreibt sich beim Deploy nicht selbst.
+          mkdir -p dist
+          cp -r index.html app.js manifest.json sw.js data vendor img dist/
+          cd dist && zip -r ../flowbend.zip .
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: flowbend.zip
