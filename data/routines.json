@@ -1,0 +1,470 @@
+[
+ {
+  "id": "wakeup",
+  "meta": "☀️ MORNING WAKE-UP",
+  "exercises": [
+   {
+    "title": "Großes Strecken",
+    "desc": "Strecke die Arme weit nach oben und atme tief ein.",
+    "duration": 30,
+    "poseId": "armsUp"
+   },
+   {
+    "title": "Katze-Kuh Flow",
+    "desc": "Bewege deine Wirbelsäule im Vierfüßerstand sanft auf und ab.",
+    "duration": 45,
+    "poseId": "catCow"
+   },
+   {
+    "title": "Seiten-Streckung",
+    "desc": "Neige den Oberkörper elegant zur Seite.",
+    "duration": 30,
+    "poseId": "sideStretch"
+   },
+   {
+    "title": "Aufrechter Stand",
+    "desc": "Komm in die Mitte, Füße parallel, Schultern locker.",
+    "duration": 20,
+    "poseId": "mountain"
+   }
+  ]
+ },
+ {
+  "id": "desk",
+  "meta": "💻 SCHREIBTISCH RESET",
+  "exercises": [
+   {
+    "title": "Nacken-Entlastung",
+    "desc": "Ohr sanft zur Schulter sinken lassen.",
+    "duration": 30,
+    "poseId": "neckStretch"
+   },
+   {
+    "title": "Brust-Öffnung",
+    "desc": "Hände hinten verschränken, Schulterblätter zusammen.",
+    "duration": 30,
+    "poseId": "chestOpen"
+   },
+   {
+    "title": "Schulterkreisen",
+    "desc": "Schultern langsam nach hinten kreisen lassen.",
+    "duration": 30,
+    "poseId": "shoulderRolls"
+   },
+   {
+    "title": "Vorbeuge im Stand",
+    "desc": "Oberkörper locker nach vorne hängen lassen.",
+    "duration": 30,
+    "poseId": "forwardFold"
+   }
+  ]
+ },
+ {
+  "id": "sleep",
+  "meta": "🌙 TIEFER SCHLAF FLOW",
+  "exercises": [
+   {
+    "title": "Stellung des Kindes",
+    "desc": "Auf den Fersen absetzen, Arme nach vorne schieben.",
+    "duration": 60,
+    "poseId": "childsPose"
+   },
+   {
+    "title": "Krokodils-Drehung",
+    "desc": "Liegend die Knie zu einer Seite sinken lassen.",
+    "duration": 45,
+    "poseId": "lyingTwist"
+   },
+   {
+    "title": "Knie zur Brust",
+    "desc": "In Rückenlage beide Knie sanft umarmen.",
+    "duration": 45,
+    "poseId": "supineKneeHug"
+   },
+   {
+    "title": "Endentspannung",
+    "desc": "Flach liegen, Arme abgelegt, Atem fließen lassen.",
+    "duration": 60,
+    "poseId": "savasana"
+   }
+  ]
+ },
+ {
+  "id": "strength",
+  "meta": "💪 KRAFT & STABILITÄT",
+  "exercises": [
+   {
+    "title": "Krieger I",
+    "desc": "Tiefer Ausfallschritt, Arme nach oben.",
+    "duration": 40,
+    "poseId": "warrior1"
+   },
+   {
+    "title": "Krieger II",
+    "desc": "Arme waagerecht ausstrecken, Blick über die Vorderhand.",
+    "duration": 40,
+    "poseId": "warrior2"
+   },
+   {
+    "title": "Stuhl",
+    "desc": "Knie beugen, als säßest du auf einem Stuhl.",
+    "duration": 30,
+    "poseId": "chair"
+   },
+   {
+    "title": "Boot",
+    "desc": "Beine und Oberkörper zum V anheben.",
+    "duration": 30,
+    "poseId": "boatPose"
+   },
+   {
+    "title": "Vogel-Hund",
+    "desc": "Gegenüberliegenden Arm und Bein lang ausstrecken.",
+    "duration": 40,
+    "poseId": "birdDog"
+   }
+  ]
+ },
+ {
+  "id": "backcare",
+  "meta": "🌿 RÜCKEN WOHLFÜHLEN",
+  "exercises": [
+   {
+    "title": "Katze",
+    "desc": "Rücken im Vierfüßerstand rund nach oben schöben.",
+    "duration": 30,
+    "poseId": "catPose"
+   },
+   {
+    "title": "Kuh",
+    "desc": "Rücken sanft durchhängen lassen, Blick hebt sich.",
+    "duration": 30,
+    "poseId": "cowPose"
+   },
+   {
+    "title": "Sphinx",
+    "desc": "Auf die Unterarme stützen, Brust leicht heben.",
+    "duration": 40,
+    "poseId": "sphinx"
+   },
+   {
+    "title": "Stellung des Kindes",
+    "desc": "Zurück auf die Fersen, Rücken weit machen.",
+    "duration": 45,
+    "poseId": "childsPose"
+   },
+   {
+    "title": "Liegende Drehung",
+    "desc": "Knie zur Seite, Schultern bleiben am Boden.",
+    "duration": 45,
+    "poseId": "lyingTwist"
+   }
+  ]
+ },
+ {
+  "id": "balance",
+  "meta": "⚖️ BALANCE FLOW",
+  "exercises": [
+   {
+    "title": "Baum",
+    "desc": "Fuß an die Innenseite des Standbeins, Hände nach oben.",
+    "duration": 40,
+    "poseId": "tree"
+   },
+   {
+    "title": "Krieger II",
+    "desc": "Stabiler Stand, Arme waagerecht halten.",
+    "duration": 40,
+    "poseId": "warrior2"
+   },
+   {
+    "title": "Halbmond",
+    "desc": "Seitlich öffnen, ein Arm zum Boden, einer nach oben.",
+    "duration": 30,
+    "poseId": "halfMoon"
+   },
+   {
+    "title": "Stuhl",
+    "desc": "Gewicht in die Fersen, Knie geschlossen beugen.",
+    "duration": 30,
+    "poseId": "chair"
+   }
+  ]
+ },
+ {
+  "id": "mobility",
+  "meta": "🤸 BEWEGLICHKEIT",
+  "exercises": [
+   {
+    "title": "Seiten-Streckung",
+    "desc": "Im Stand zur Seite neigen, Flanke wird lang.",
+    "duration": 30,
+    "poseId": "sideStretch"
+   },
+   {
+    "title": "Stehende Drehung",
+    "desc": "Oberkörper nach hinten drehen, Hüfte bleibt vorn.",
+    "duration": 30,
+    "poseId": "standingTwist"
+   },
+   {
+    "title": "Sitzende Drehung",
+    "desc": "Im Sitzen sanft über die Schulter blicken.",
+    "duration": 40,
+    "poseId": "seatedTwist"
+   },
+   {
+    "title": "Schmetterling",
+    "desc": "Fußsohlen zusammen, Knie sinken lassen.",
+    "duration": 40,
+    "poseId": "butterfly"
+   }
+  ]
+ },
+ {
+  "id": "energizer",
+  "meta": "⚡ ENERGIE-KICK",
+  "exercises": [
+   {
+    "title": "Wadenheben",
+    "desc": "Auf die Fußballen kommen, Arme nach oben.",
+    "duration": 25,
+    "poseId": "calfRaise"
+   },
+   {
+    "title": "Stehender Rückbeuge",
+    "desc": "Sanft öffnen und den Brustkorb heben.",
+    "duration": 25,
+    "poseId": "standingBackbend"
+   },
+   {
+    "title": "Krieger I",
+    "desc": "Kraftvoller Ausfallschritt, Arme hoch.",
+    "duration": 40,
+    "poseId": "warrior1"
+   },
+   {
+    "title": "Kamel",
+    "desc": "Im Kniestand öffnen, Hände Richtung Fersen.",
+    "duration": 35,
+    "poseId": "camel"
+   }
+  ]
+ },
+ {
+  "id": "hips",
+  "meta": "🦵 HÜFTÖFFNER",
+  "exercises": [
+   {
+    "title": "Schmetterling",
+    "desc": "Sohlen zusammen, sanft in die Hüfte atmen.",
+    "duration": 45,
+    "poseId": "butterfly"
+   },
+   {
+    "title": "Tiefer Ausfallschritt",
+    "desc": "Vorderer Fuß vorn, hintere Hüfte sinkt.",
+    "duration": 40,
+    "poseId": "lowLunge"
+   },
+   {
+    "title": "Liegender Schmetterling",
+    "desc": "Rücklings, Sohlen zusammen, Knie offen.",
+    "duration": 45,
+    "poseId": "recliningButterfly"
+   },
+   {
+    "title": "Glückliches Baby",
+    "desc": "Knie zur Achsel, Fußaußenkanten halten.",
+    "duration": 40,
+    "poseId": "happyBaby"
+   }
+  ]
+ },
+ {
+  "id": "neckShoulder",
+  "meta": "🧣 NACKEN & SCHULTERN",
+  "exercises": [
+   {
+    "title": "Nacken-Entlastung",
+    "desc": "Ohr zur Schulter, Gegenseite zieht zum Boden.",
+    "duration": 30,
+    "poseId": "neckStretch"
+   },
+   {
+    "title": "Schulterkreisen",
+    "desc": "Schultern groß nach hinten kreisen.",
+    "duration": 30,
+    "poseId": "shoulderRolls"
+   },
+   {
+    "title": "Brust-Öffnung",
+    "desc": "Hände hinten fassen, Brust weit machen.",
+    "duration": 30,
+    "poseId": "chestOpen"
+   },
+   {
+    "title": "Adlerarme",
+    "desc": "Ein Arm hoch, einer tief, hinter dem Rücken nähern.",
+    "duration": 30,
+    "poseId": "cowFaceArms"
+   }
+  ]
+ },
+ {
+  "id": "legs",
+  "meta": "🦿 BEINE & WADEN",
+  "exercises": [
+   {
+    "title": "Quadrizeps-Dehnung",
+    "desc": "Fuß zum Gesäß ziehen, Knie nach unten.",
+    "duration": 30,
+    "poseId": "quadStretch"
+   },
+   {
+    "title": "Seitlicher Ausfallschritt",
+    "desc": "Gewicht auf ein Bein, anderes lang strecken.",
+    "duration": 35,
+    "poseId": "lateralLunge"
+   },
+   {
+    "title": "Vorbeuge",
+    "desc": "Oberkörper hängen lassen, Beinrückseite dehnt.",
+    "duration": 35,
+    "poseId": "forwardFold"
+   },
+   {
+    "title": "Wadenheben",
+    "desc": "Auf die Zehen, kurz halten, langsam senken.",
+    "duration": 25,
+    "poseId": "calfRaise"
+   }
+  ]
+ },
+ {
+  "id": "corestretch",
+  "meta": "🔥 CORE & DEHNUNG",
+  "exercises": [
+   {
+    "title": "Boot",
+    "desc": "Balance auf dem Sitzbein, Beine anheben.",
+    "duration": 30,
+    "poseId": "boatPose"
+   },
+   {
+    "title": "Kobra",
+    "desc": "Bauchlage, Brust heben, Schultern weg von den Ohren.",
+    "duration": 30,
+    "poseId": "cobra"
+   },
+   {
+    "title": "Brücke",
+    "desc": "Hüfte heben, Füße fest am Boden.",
+    "duration": 35,
+    "poseId": "bridge"
+   },
+   {
+    "title": "Heraufschauender Hund",
+    "desc": "Brust nach vorn oben, Oberschenkel anheben.",
+    "duration": 30,
+    "poseId": "upwardDog"
+   }
+  ]
+ },
+ {
+  "id": "calm",
+  "meta": "🧘 RUHE & ATEM",
+  "exercises": [
+   {
+    "title": "Sitzmeditation",
+    "desc": "Aufrecht sitzen, ruhig ein- und ausatmen.",
+    "duration": 60,
+    "poseId": "seatedMeditation"
+   },
+   {
+    "title": "Schmetterling",
+    "desc": "Sohlen zusammen, mit jeder Ausatmung tiefer sinken.",
+    "duration": 45,
+    "poseId": "butterfly"
+   },
+   {
+    "title": "Stellung des Kindes",
+    "desc": "Stirn ablegen, Rücken rundet sich entspannt.",
+    "duration": 45,
+    "poseId": "childsPose"
+   },
+   {
+    "title": "Endentspannung",
+    "desc": "Völlig lösen, nichts mehr tun.",
+    "duration": 60,
+    "poseId": "savasana"
+   }
+  ]
+ },
+ {
+  "id": "fullbody",
+  "meta": "🌟 GANZKÖRPER",
+  "exercises": [
+   {
+    "title": "Aufrechter Stand",
+    "desc": "Ankommen, Füße parallel, ruhig atmen.",
+    "duration": 20,
+    "poseId": "mountain"
+   },
+   {
+    "title": "Krieger I",
+    "desc": "Ausfallschritt, Arme nach oben.",
+    "duration": 35,
+    "poseId": "warrior1"
+   },
+   {
+    "title": "Vorbeuge",
+    "desc": "Oberkörper sinken lassen, Kopf schwer.",
+    "duration": 30,
+    "poseId": "forwardFold"
+   },
+   {
+    "title": "Sitzende Vorbeuge",
+    "desc": "Beine lang, über die Oberschenkel falten.",
+    "duration": 40,
+    "poseId": "seatedForwardFold"
+   },
+   {
+    "title": "Brücke",
+    "desc": "Hüfte heben, Brust Richtung Kinn.",
+    "duration": 35,
+    "poseId": "bridge"
+   },
+   {
+    "title": "Endentspannung",
+    "desc": "Alles ablegen, Atem fließen lassen.",
+    "duration": 60,
+    "poseId": "savasana"
+   }
+  ]
+ },
+ {
+  "id": "quickstretch",
+  "meta": "⏱️ KURZE PAUSE",
+  "exercises": [
+   {
+    "title": "Großes Strecken",
+    "desc": "Arme hoch, einmal richtig lang machen.",
+    "duration": 20,
+    "poseId": "armsUp"
+   },
+   {
+    "title": "Seiten-Streckung",
+    "desc": "Kurz zur Seite neigen, beide Seiten.",
+    "duration": 20,
+    "poseId": "sideStretch"
+   },
+   {
+    "title": "Nacken-Entlastung",
+    "desc": "Kopf sanft zur Seite sinken lassen.",
+    "duration": 20,
+    "poseId": "neckStretch"
+   }
+  ]
+ }
+]

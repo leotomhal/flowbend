@@ -1,0 +1,20 @@
+{
+  "name": "flowbend – Dehn- & Mobilitäts-Routinen",
+  "short_name": "flowbend",
+  "description": "Geführte Dehn-, Mobilitäts- und Kraft-Routinen. Läuft komplett im Browser, offline-fähig, ohne Backend.",
+  "lang": "de",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fcfbfa",
+  "theme_color": "#d97736",
+  "icons": [
+    {
+      "src": "img/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

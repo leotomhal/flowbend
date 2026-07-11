@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>flowbend — Geführte Dehn- & Mobilitäts-Routinen</title>
+  <meta name="description" content="flowbend – geführte Dehn-, Mobilitäts- und Kraft-Routinen. Läuft komplett im Browser, offline-fähig, ohne Backend.">
+  <meta name="theme-color" content="#d97736">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="flowbend">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23fdf6f0'/%3E%3Cpath d='M20 62 C 40 30, 60 30, 80 62' fill='none' stroke='%23d97736' stroke-width='9' stroke-linecap='round'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --bg-color: #fcfbfa;
+      --card-bg: #ffffff;
+      --text-main: #2c2a29;
+      --text-sub: #96918e;
+      --accent-warm: #d97736;
+      --accent-light: #fdf6f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 15px; }
+    .app-container { width: 100%; max-width: 420px; height: 90vh; max-height: 760px; background: var(--card-bg); border-radius: 40px; padding: 30px; box-shadow: 0 30px 60px rgba(217, 119, 54, 0.08); display: flex; flex-direction: column; overflow: hidden; position: relative; border: 1px solid rgba(217, 119, 54, 0.05); }
+    .view { display: flex; flex-direction: column; height: 100%; animation: fadeIn 0.5s cubic-bezier(0.1, 1, 0.1, 1); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .header h1 { font-size: 2rem; font-weight: 300; letter-spacing: -0.5px; text-align: center; margin-top: 10px; }
+    .streak-badge { background: var(--accent-light); color: var(--accent-warm); padding: 10px 20px; border-radius: 20px; align-self: center; font-weight: 600; font-size: 0.9rem; margin: 15px 0 25px 0; }
+    .status-indicator { font-size: 0.75rem; text-align: center; color: var(--text-sub); margin-bottom: 10px; }
+    .scroll-area { flex: 1; overflow-y: auto; padding-right: 4px; }
+    .scroll-area::-webkit-scrollbar { width: 4px; }
+    .scroll-area::-webkit-scrollbar-thumb { background: #e0dbd6; border-radius: 4px; }
+    .routine-list { display: flex; flex-direction: column; }
+    .section-label { font-size: 0.72rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-sub); margin: 4px 2px 12px; }
+    .duration-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+    .duration-toggle button { flex: 1; border: 1px solid #f2efeb; background: #fff; border-radius: 16px; padding: 11px; font-size: 0.9rem; font-weight: 600; color: var(--text-sub); cursor: pointer; transition: all 0.25s ease; }
+    .duration-toggle button.active { background: var(--accent-warm); color: #fff; border-color: var(--accent-warm); }
+    .area-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .area-btn { background: #fff; border: 1px solid #f2efeb; border-radius: 18px; padding: 15px; font-size: 1rem; font-weight: 500; color: var(--text-main); cursor: pointer; text-align: left; transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
+    .area-btn:hover { transform: translateY(-3px); border-color: var(--accent-warm); box-shadow: 0 10px 20px rgba(217, 119, 54, 0.06); }
+    .area-btn small { display: block; color: var(--text-sub); font-size: 0.72rem; margin-top: 3px; font-weight: 400; }
+    .routine-card { background: #fff; border: 1px solid #f2efeb; border-radius: 24px; padding: 20px; margin-bottom: 14px; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); display: flex; justify-content: space-between; align-items: center; }
+    .routine-card:hover { transform: translateY(-4px); border-color: var(--accent-warm); box-shadow: 0 12px 24px rgba(217, 119, 54, 0.06); }
+    .routine-info h3 { font-size: 1.15rem; font-weight: 500; margin-bottom: 4px; }
+    .routine-info p { font-size: 0.85rem; color: var(--text-sub); }
+    #player-view { display: none; text-align: center; }
+    .progress-bar-container { width: 100%; height: 4px; background: #f2efeb; border-radius: 2px; margin-bottom: 10px; overflow: hidden; }
+    .progress-bar { height: 100%; width: 0%; background: var(--accent-warm); transition: width 0.4s ease; }
+    .stage-area { position: relative; width: 100%; height: 240px; margin: 10px 0; display: flex; justify-content: center; align-items: center; }
+    .zen-waves { position: absolute; width: 260px; height: 260px; border: 1px solid rgba(217, 119, 54, 0.12); border-radius: 50%; animation: pulseWave 4s infinite ease-in-out; pointer-events: none; }
+    .stretching-svg { width: 200px; height: 200px; z-index: 2; }
+    .pose-image { display: none; width: 100%; height: auto; max-height: 340px; object-fit: contain; border-radius: 24px; z-index: 2; }
+    .stage-area.has-image { height: auto; }
+    .stage-area.has-image .zen-waves { display: none; }
+    .stretching-svg g, .stretching-svg line, .stretching-svg circle { transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+    .breathing-animation { animation: gentleBreathe 4s infinite ease-in-out; transform-origin: 100px 150px; }
+    @keyframes gentleBreathe { 0% { transform: scale(1) translateY(0); } 50% { transform: scale(1.02) translateY(-2px); } 100% { transform: scale(1) translateY(0); } }
+    @keyframes pulseWave { 0% { transform: scale(0.95); opacity: 0.4; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(0.95); opacity: 0.4; } }
+    .paused-state .breathing-animation, .paused-state .zen-waves { animation-play-state: paused !important; }
+    .exercise-title { font-size: 1.5rem; font-weight: 400; margin-bottom: 10px; }
+    .exercise-desc { font-size: 0.95rem; color: var(--text-sub); line-height: 1.5; min-height: 70px; padding: 0 15px; }
+    .time-display { font-size: 3.5rem; font-weight: 300; color: var(--text-main); margin: 20px 0; font-variant-numeric: tabular-nums; }
+    .controls { display: flex; gap: 12px; margin-top: auto; }
+    .btn { flex: 1; background: var(--accent-warm); color: white; border: none; padding: 18px; border-radius: 20px; font-size: 1rem; font-weight: 500; cursor: pointer; }
+    .btn-secondary { background: #f7f5f2; color: var(--text-main); }
+  </style>
+  <script src="vendor/dexie.min.js"></script>
+</head>
+<body>
+<div class="app-container">
+  <div id="dashboard-view" class="view">
+    <div class="header"><h1>flowbend</h1></div>
+    <div class="streak-badge">⚡ <span id="streak-count">0</span> Tage in Folge</div>
+    <div id="db-status" class="status-indicator">Initialisiere...</div>
+    <div class="scroll-area">
+      <div class="section-label">Nach Bereich</div>
+      <div class="duration-toggle" id="duration-toggle">
+        <button data-min="5">5 Min</button>
+        <button data-min="10" class="active">10 Min</button>
+        <button data-min="15">15 Min</button>
+      </div>
+      <div class="area-grid" id="area-grid"></div>
+      <div class="section-label" style="margin-top: 22px;">Fertige Routinen</div>
+      <div class="routine-list"></div>
+    </div>
+  </div>
+  <div id="player-view" class="view">
+    <div>
+      <div class="progress-bar-container"><div class="progress-bar" id="progress"></div></div>
+      <div id="routine-meta-title" style="font-size: 0.8rem; color: var(--text-sub); letter-spacing: 1px;"></div>
+    </div>
+    <div class="stage-area" id="stage">
+      <div class="zen-waves"></div>
+      <img id="pose-image" class="pose-image" alt="" />
+      <svg id="pose-svg" class="stretching-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <g class="breathing-animation" stroke="#d97736" stroke-width="8" stroke-linecap="round" fill="none">
+          <line x1="40" y1="165" x2="160" y2="165" stroke="#f2efeb" stroke-width="4" />
+          <line id="spine" x1="100" y1="140" x2="100" y2="90" />
+          <line id="left-leg" x1="100" y1="140" x2="85" y2="165" />
+          <line id="right-leg" x1="100" y1="140" x2="115" y2="165" />
+          <line id="left-arm" x1="100" y1="100" x2="75" y2="100" />
+          <line id="right-arm" x1="100" y1="100" x2="125" y2="100" />
+          <circle id="head" cx="100" cy="70" r="14" fill="#d97736" stroke="none" />
+        </g>
+      </svg>
+    </div>
+    <div>
+      <div class="exercise-title" id="ex-title">Übung</div>
+      <div class="exercise-desc" id="ex-desc">Beschreibung...</div>
+    </div>
+    <div class="time-display" id="time-display">00:00</div>
+    <div class="controls">
+      <button class="btn btn-secondary" onclick="quitRoutine()">Abbrechen</button>
+      <button class="btn btn-secondary" id="skip-btn" onclick="skipExercise()">➔ Weiter</button>
+      <button class="btn" id="pause-btn" onclick="togglePause()">Pause</button>
+    </div>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
