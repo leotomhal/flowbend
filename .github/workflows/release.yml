@@ -24,4 +24,11 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
+          name: flowbend ${{ github.ref_name }}
+          generate_release_notes: true
           files: flowbend.zip
+          body: |
+            Deploy-Paket **flowbend.zip** – nur die lauffähigen Dateien
+            (index.html, app.js, manifest.json, sw.js, data/, vendor/, img/).
+            Wird vom Auto-Updater (`deploy/update-check-*.php`) automatisch
+            in den Webroot entpackt.
