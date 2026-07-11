@@ -52,6 +52,19 @@ async function initApp() {
       : "Keine Daten verfuegbar – bitte einmal online laden";
   }
   renderDashboardFromDB(); buildAreaUI(); updateStreak();
+  if (!localStorage.getItem("fb_disclaimer_ack")) showDisclaimer(); // Erststart-Hinweis
+}
+
+// Medizinischer Hinweis / Disclaimer.
+function showDisclaimer() {
+  document.getElementById("dashboard-view").style.display = "none";
+  document.getElementById("player-view").style.display = "none";
+  document.getElementById("disclaimer-view").style.display = "flex";
+}
+function ackDisclaimer() {
+  localStorage.setItem("fb_disclaimer_ack", "1");
+  document.getElementById("disclaimer-view").style.display = "none";
+  document.getElementById("dashboard-view").style.display = "flex";
 }
 
 async function renderDashboardFromDB() {
