@@ -99,8 +99,14 @@ Zähler beim nächsten Training wieder bei 1.
   Generator-Reihenfolge, nicht die echte Körperhaltung – beim Foto-Briefing nicht stolpern.
 - **Dünne Fokus-Bereiche wiederholen sich.** z. B. Nacken (3 Posen): ein 10-Min-Programm
   spielt die Sequenz mehrfach. Rücken (27) trägt 15 Min ohne Wiederholung.
-- **Einseitige Posen werden nicht gespiegelt.** Warrior I/II, Side Plank, seitliche
-  Dehnungen laufen nur auf einer Seite. Offener Ausbau: `side`-Feld + automatische Verdopplung.
+- **Einseitige Posen werden automatisch beidseitig gespielt.** Posen in der `BILATERAL`-Liste
+  (`app.js`) werden im Ablauf in „(rechts)" + „(links)" aufgeteilt (Haltezeit hälftig), die
+  linke Seite wird per CSS `scaleX(-1)` gespiegelt.
+- **„Bereit machen"-Phase.** Vor jeder Übung läuft ein kurzer Vorbereitungs-Countdown
+  (`PREP_SECONDS`, Standard 5 s) mit Banner „als Nächstes: …".
+- **Player-Timer ist zeitstempel-basiert** (`phaseEndsAt`), damit er nach Bildschirm-Sleep/
+  Tab-Wechsel stimmt; zusätzlich hält ein **Screen Wake Lock** den Bildschirm während der
+  Routine an (Fallback: läuft ohne Wake Lock normal weiter).
 - **Generierte Übungstexte sind generisch** („Ruhig halten und tief atmen.") + englischer
   Posenname; nur kuratierte Routinen haben individuelle deutsche Beschreibungen.
 - **Generierte Programme sind deterministisch** (kein Zufall) – gleiches Programm bei jedem Start.
@@ -121,7 +127,6 @@ Zähler beim nächsten Training wieder bei 1.
 - **Routine-Editor im Browser**: neue Routinen anlegen. Empfohlen mit **getrennten Stores**
   (`userRoutines`/`userPoses`), die beim Sync **nicht** geleert werden – sonst löscht der
   `clear()`-Schritt eigene Einträge.
-- **Seitenwechsel** für einseitige Posen (`side`-Feld + Verdopplung).
 - **Variable Haltezeiten** (z. B. Entspannung länger, Kraft kürzer) über `holdSeconds`.
 - **Abwechslung** im Generator (Shuffle innerhalb der Positionsgruppen).
 

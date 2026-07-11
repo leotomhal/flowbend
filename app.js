@@ -11,6 +11,22 @@ const HISTORY_KEY = "fb_history";
 let currentRoutine = null, currentExIndex = 0, timeLeft = 0, timerId = null, isPaused = false;
 let selectedMinutes = 10;
 
+// Player-Zustand (zeitstempel-basiert, damit der Timer auch nach Bildschirm-Sleep stimmt).
+const PREP_SECONDS = 5;   // "Bereit machen" vor jeder Übung
+let phase = "hold";       // "prep" | "hold"
+let phaseEndsAt = 0;      // Ziel-Endzeitpunkt der aktuellen Phase (ms)
+let pausedRemaining = 0;  // Restzeit beim Pausieren (ms)
+let currentEx = null;     // aktuell laufende (evtl. seiten-spezifische) Übung
+let wakeLock = null;      // Screen Wake Lock
+
+// Einseitige Posen: im Ablauf automatisch beide Seiten (rechts + links), zweite gespiegelt.
+const BILATERAL = new Set([
+  "warrior1", "warrior2", "tree", "halfMoon", "quadStretch", "lateralLunge",
+  "sideStretch", "standingSideReach", "standingTwist", "neckStretch", "lowLunge",
+  "gatePose", "threadNeedle", "birdDog", "seatedTwist", "seatedSideStretch",
+  "seatedNeckStretch", "headToKnee", "cowFaceArms", "eaglePrep", "lyingTwist", "sidePlank"
+]);
+
 // Auswahl der Bereiche fürs Dashboard (deutsches Label -> focus-Tag).
 // Nur Bereiche mit ausreichender Posenzahl; dünne Tags (wrists, calves ...) bewusst weggelassen.
 const AREAS = [
@@ -122,10 +138,12 @@ async function startArea(tag, label, minutes) {
 // Spielt eine fertige Routine ab (egal ob aus DB oder generiert).
 function playRoutine(routine) {
   if (!routine) { alert("Routine nicht gefunden."); return; }
-  currentRoutine = routine; currentExIndex = 0; isPaused = false;
+  currentRoutine = { ...routine, exercises: expandBilateral(routine.exercises) };
+  currentExIndex = 0; isPaused = false;
   document.getElementById("dashboard-view").style.display = "none";
   document.getElementById("player-view").style.display = "flex";
   document.getElementById("routine-meta-title").innerText = currentRoutine.meta;
+  requestWakeLock();
   loadExercise();
 }
 
@@ -135,21 +153,47 @@ async function startRoutine(id) {
 
 async function loadExercise() {
   const ex = currentRoutine.exercises[currentExIndex];
+  currentEx = ex;
   document.getElementById("ex-title").innerText = ex.title;
   document.getElementById("ex-desc").innerText = ex.desc;
-  timeLeft = ex.duration; formatTimeDisplay(timeLeft);
   const pose = await db.poses.get(ex.poseId); showPose(pose);
+  document.getElementById("stage").classList.toggle("mirror", ex.side === "left"); // linke Seite gespiegelt
   document.getElementById("progress").style.width = (currentExIndex / currentRoutine.exercises.length) * 100 + "%";
   document.getElementById("stage").classList.remove("paused-state");
   document.getElementById("pause-btn").innerText = "Pause";
-  tone(440, 0.1); clearInterval(timerId); timerId = setInterval(tick, 1000);
+  startPhase("prep");
+}
+
+// Startet eine Phase (Vorbereitung oder Halten) mit fester Ziel-Endzeit.
+function startPhase(newPhase) {
+  phase = newPhase;
+  const banner = document.getElementById("prep-banner");
+  if (phase === "prep") {
+    banner.innerText = "Bereit machen · als Nächstes: " + currentEx.title;
+    banner.style.display = "block";
+    phaseEndsAt = Date.now() + PREP_SECONDS * 1000;
+    tone(300, 0.08);
+  } else {
+    banner.style.display = "none";
+    phaseEndsAt = Date.now() + currentEx.duration * 1000;
+    tone(440, 0.1);
+  }
+  updateTimeFromClock();
+  clearInterval(timerId); timerId = setInterval(tick, 250);
 }
 
 function tick() {
   if (isPaused) return;
-  timeLeft--; formatTimeDisplay(timeLeft);
-  if (timeLeft <= 3 && timeLeft > 0) tone(380, 0.05);
-  if (timeLeft <= 0) nextExercise();
+  updateTimeFromClock();
+}
+
+// Restzeit aus der Ziel-Endzeit ableiten -> selbstkorrigierend nach Hintergrund/Sleep.
+function updateTimeFromClock() {
+  const remaining = Math.max(0, Math.round((phaseEndsAt - Date.now()) / 1000));
+  const prev = timeLeft;
+  timeLeft = remaining; formatTimeDisplay(remaining);
+  if (phase === "hold" && remaining <= 3 && remaining > 0 && remaining !== prev) tone(380, 0.05);
+  if (remaining <= 0) { if (phase === "prep") startPhase("hold"); else nextExercise(); }
 }
 
 function skipExercise() { nextExercise(); }
@@ -192,11 +236,64 @@ function formatTimeDisplay(secs) {
 
 function togglePause() {
   isPaused = !isPaused;
+  if (isPaused) {
+    pausedRemaining = Math.max(0, phaseEndsAt - Date.now());
+  } else {
+    phaseEndsAt = Date.now() + pausedRemaining; // Ziel-Endzeit um die Pausendauer verschieben
+    requestWakeLock();
+    updateTimeFromClock();
+  }
   document.getElementById("stage").classList.toggle("paused-state", isPaused);
   document.getElementById("pause-btn").innerText = isPaused ? "Weiter" : "Pause";
 }
 
-function quitRoutine() { clearInterval(timerId); document.getElementById("player-view").style.display = "none"; document.getElementById("dashboard-view").style.display = "flex"; }
+function quitRoutine() {
+  clearInterval(timerId);
+  releaseWakeLock();
+  document.getElementById("stage").classList.remove("mirror");
+  document.getElementById("player-view").style.display = "none";
+  document.getElementById("dashboard-view").style.display = "flex";
+}
+
+// Einseitige Übungen in zwei Seiten aufteilen (rechts + links), Haltezeit hälftig.
+function expandBilateral(exercises) {
+  const out = [];
+  for (const ex of exercises) {
+    if (BILATERAL.has(ex.poseId)) {
+      const right = Math.max(8, Math.round(ex.duration / 2));
+      const left = Math.max(8, ex.duration - right);
+      out.push({ ...ex, duration: right, title: ex.title + " (rechts)", side: "right" });
+      out.push({ ...ex, duration: left, title: ex.title + " (links)", side: "left" });
+    } else {
+      out.push({ ...ex, side: null });
+    }
+  }
+  return out;
+}
+
+function playerActive() { return document.getElementById("player-view").style.display === "flex"; }
+
+// Screen Wake Lock: Bildschirm während der Routine an halten.
+async function requestWakeLock() {
+  try {
+    if ("wakeLock" in navigator && document.visibilityState === "visible") {
+      wakeLock = await navigator.wakeLock.request("screen");
+      wakeLock.addEventListener("release", () => { wakeLock = null; });
+    }
+  } catch (e) { /* z. B. Energiesparmodus – Routine läuft trotzdem weiter. */ }
+}
+async function releaseWakeLock() {
+  try { if (wakeLock) await wakeLock.release(); } catch (e) {}
+  wakeLock = null;
+}
+
+// Nach Rückkehr in den Vordergrund: Wake Lock neu holen + Timer sofort korrigieren.
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && playerActive() && !isPaused) {
+    requestWakeLock();
+    updateTimeFromClock();
+  }
+});
 
 // Einen einzigen AudioContext wiederverwenden – ein neuer pro Ton stösst schnell
 // an das Browser-Limit (~6 Contexts) und der Ton bricht ab.

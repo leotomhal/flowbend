@@ -74,6 +74,8 @@
     .disclaimer-text { font-size: 0.92rem; line-height: 1.6; color: var(--text-main); padding-right: 6px; }
     .disclaimer-text p { margin-bottom: 14px; }
     .disclaimer-text strong { color: var(--accent-warm); }
+    #prep-banner { display: none; background: var(--accent-light); color: var(--accent-warm); font-size: 0.88rem; font-weight: 600; text-align: center; padding: 9px 12px; border-radius: 14px; margin: 6px 0 -2px; }
+    .stage-area.mirror .pose-image, .stage-area.mirror .stretching-svg { transform: scaleX(-1); }
   </style>
   <script src="vendor/dexie.min.js"></script>
 </head>
@@ -104,6 +106,7 @@
       <div class="progress-bar-container"><div class="progress-bar" id="progress"></div></div>
       <div id="routine-meta-title" style="font-size: 0.8rem; color: var(--text-sub); letter-spacing: 1px;"></div>
     </div>
+    <div id="prep-banner"></div>
     <div class="stage-area" id="stage">
       <div class="zen-waves"></div>
       <img id="pose-image" class="pose-image" alt="" />
