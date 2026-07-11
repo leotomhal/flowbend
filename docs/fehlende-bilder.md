@@ -1,27 +1,11 @@
 # Noch fehlende Pose-Bilder
 
-_Stand: 11.07.2026 · 30 von 58 vorhanden · **26 fehlen** (sitzend 11 · liegend 15)_
+_Stand: 11.07.2026 · 43 von 58 vorhanden · **15 fehlen** (alle liegend)_
 
 Dateiname = `img/<id>.png` (case-sensitive). Bis ein Bild vorhanden ist, zeigt
 die App automatisch das Strichmännchen.
 
-> Kniende Posen (`downwardDog`, `dolphinPose`) sind hier bewusst ausgelassen.
-
-## 🪑 Sitzend — 11 fehlen
-
-| ID (`img/<id>.png`) | Name | Beschreibung |
-|---|---|---|
-| `seatedForwardFold` | Sitzende Vorbeuge · *Seated Forward Fold* | Mit langen Beinen sitzen, mit geradem Rücken nach vorn über die Beine falten. |
-| `seatedTwist` | Sitzende Drehung · *Seated Twist* | Aufrecht sitzen, Oberkörper drehen, eine Hand als Stütze hinter dem Rücken. |
-| `butterfly` | Schmetterling · *Butterfly Pose* | Sitzend die Fußsohlen zusammenführen, Knie zur Seite sinken lassen, aufrecht bleiben. |
-| `seatedSideStretch` | Sitzende Seitneige · *Seated Side Stretch* | Im Sitzen einen Arm über den Kopf führen, Oberkörper zur Seite neigen. |
-| `boatPose` | Boot · *Boat Pose* | Auf dem Sitzbein balancieren, Oberkörper und Beine zum V anheben, Arme parallel zum Boden. |
-| `headToKnee` | Kopf-zum-Knie · *Head-to-Knee Pose* | Ein Bein gestreckt, das andere angewinkelt, mit geradem Rücken über das gestreckte Bein beugen. |
-| `seatedMeditation` | Meditationssitz · *Easy Pose* | Bequem im Schneidersitz sitzen, Wirbelsäule aufrecht, Hände auf den Knien, ruhig atmen. |
-| `cowFaceArms` | Kuhkopf-Arme · *Cow Face Arms* | Einen Arm über die Schulter, den anderen von unten hinter den Rücken führen, Hände annähern. |
-| `staffPose` | Stockhaltung · *Staff Pose* | Mit gestreckten Beinen aufrecht sitzen, Hände neben der Hüfte, Wirbelsäule lang. |
-| `seatedNeckStretch` | Sitzende Nackendehnung · *Seated Neck Stretch* | Aufrecht sitzen, Kopf zur Seite neigen, Gegenschulter zieht nach unten. |
-| `reverseTabletop` | Umgekehrter Tisch · *Reverse Tabletop* | Rücklings auf Hände und Füße stützen, Hüfte heben, bis Oberkörper und Oberschenkel waagerecht sind. |
+> Stehend, kniend und sitzend sind vollständig – es fehlt nur noch die Gruppe **liegend**.
 
 ## 🛌 Liegend — 15 fehlen
 
