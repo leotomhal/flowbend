@@ -1,0 +1,47 @@
+name: Optimize Images
+
+# Läuft automatisch, wenn du Bilder nach img/ pushst (z. B. per GitHub-App).
+# Verkleinert sie auf max. 800 px (lange Kante), strippt Metadaten und
+# komprimiert PNGs – und committet die verkleinerten Fassungen zurück.
+on:
+  push:
+    paths:
+      - 'img/**.png'
+      - 'img/**.jpg'
+      - 'img/**.jpeg'
+
+permissions:
+  contents: write
+
+jobs:
+  optimize:
+    # Verhindert eine Endlosschleife: der eigene Rück-Commit triggert nicht erneut.
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tools installieren
+        run: sudo apt-get -qq update && sudo apt-get -qq install -y imagemagick pngquant
+
+      - name: Verkleinern & komprimieren
+        run: |
+          shopt -s nullglob
+          for f in img/*.png img/*.jpg img/*.jpeg; do
+            convert "$f" -resize '800x800>' -strip -quality 82 "$f"
+          done
+          for f in img/*.png; do
+            pngquant --force --skip-if-larger --quality=65-90 --output "$f" "$f" || true
+          done
+
+      - name: Zurück-Commit (nur bei Änderungen)
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet -- img; then
+            git add img
+            git commit -m "Optimize images (resize <=800px, compress)"
+            git push
+          else
+            echo "Keine Änderungen – Bilder bereits optimiert."
+          fi

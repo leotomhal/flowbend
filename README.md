@@ -53,7 +53,17 @@ vendor/dexie.min.js IndexedDB-Wrapper (lokal gevendored, kein CDN)
 img/                Pose-Bilder (img/<id>.png) + App-Icon
 docs/handover.md    Ausführliche Architektur- & Datendoku
 docs/uebungen.md    Alle 58 Übungen mit Beschreibung + Bild-Checkliste
+tools/check-poses.py     Abgleich: welche Pose-Bilder fehlen noch?
+tools/optimize-images.sh Bilder lokal verkleinern/komprimieren (en Block)
 ```
+
+## Bilder pflegen
+
+- **Fehlende Bilder finden:** `python3 tools/check-poses.py` listet alle Posen ohne Bild
+  (und Bilder mit falscher Dateiendung).
+- **Verkleinern:** Bilder einfach nach `img/` hochladen – die GitHub-Action
+  `optimize-images` verkleinert sie automatisch auf max. 800 px und committet sie
+  zurück. Am Rechner alternativ `bash tools/optimize-images.sh`.
 
 ## Datenmodell (Kurzform)
 
