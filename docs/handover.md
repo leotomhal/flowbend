@@ -32,7 +32,8 @@ data/routines.json┴─►  fetch (beim Start)  ─►  IndexedDB (Dexie)  ─�
 | `manifest.json` | PWA-Manifest (installierbar) |
 | `sw.js` | Service Worker (App-Shell cache-first, Daten network-first) |
 | `data/poses.json` | 58 Posen (Stammdaten) |
-| `data/routines.json` | 15 kuratierte Routinen |
+| `data/routines.json` | 15 kuratierte Routinen (Flows, zeitbasiert) |
+| `data/workouts.json` | Kraft-Zirkel (Arbeit/Pause/Runden); Posen mit `circuitOnly` |
 | `vendor/dexie.min.js` | IndexedDB-Wrapper, lokal gevendored (kein CDN) |
 | `img/<id>.webp` | Pose-Bilder (WebP, aus PNG konvertiert) |
 | `img/icon-192.png`, `img/icon-512.png` | App-/Browser-Icons |

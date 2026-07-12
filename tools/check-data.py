@@ -17,6 +17,8 @@ REQUIRED = ["id", "name", "focus", "position", "image",
 
 poses = json.load(open(os.path.join(ROOT, "data", "poses.json"), encoding="utf-8"))
 routines = json.load(open(os.path.join(ROOT, "data", "routines.json"), encoding="utf-8"))
+wpath = os.path.join(ROOT, "data", "workouts.json")
+workouts = json.load(open(wpath, encoding="utf-8")) if os.path.isfile(wpath) else []
 
 errors, ids = [], set()
 for p in poses:
@@ -28,7 +30,7 @@ for p in poses:
         errors.append(f"Doppelte Pose-id: {pid}")
     ids.add(pid)
     img = p.get("image")
-    if img and not os.path.isfile(os.path.join(ROOT, img)):
+    if img and not os.path.isfile(os.path.join(ROOT, img)):  # leeres image = Strichmännchen, ok
         errors.append(f"Pose {pid}: Bild fehlt ({img})")
 
 for r in routines:
@@ -36,10 +38,15 @@ for r in routines:
         if ex.get("poseId") not in ids:
             errors.append(f"Routine {r.get('id')}: poseId '{ex.get('poseId')}' existiert nicht in poses.json")
 
+for w in workouts:
+    for ex in w.get("exercises", []):
+        if ex.get("poseId") not in ids:
+            errors.append(f"Workout {w.get('id')}: poseId '{ex.get('poseId')}' existiert nicht in poses.json")
+
 if errors:
     print("❌ Datencheck fehlgeschlagen:")
     for e in errors:
         print("   -", e)
     sys.exit(1)
 
-print(f"✅ OK: {len(poses)} Posen, {len(routines)} Routinen – alle poseIds & Bilder vorhanden.")
+print(f"✅ OK: {len(poses)} Posen, {len(routines)} Routinen, {len(workouts)} Zirkel – alle poseIds & Bilder vorhanden.")

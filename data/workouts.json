@@ -1,0 +1,11 @@
+[
+ {"id": "core", "meta": "🔥 CORE-ZIRKEL", "rounds": 2, "work": 30, "rest": 10, "exercises": [
+   {"poseId": "plank"}, {"poseId": "boatPose"}, {"poseId": "hollowHold"}, {"poseId": "birdDog"}, {"poseId": "sidePlank"}, {"poseId": "bridge"}
+ ]},
+ {"id": "fullbody", "meta": "💪 GANZKÖRPER-KRAFT", "rounds": 3, "work": 35, "rest": 15, "exercises": [
+   {"poseId": "squat"}, {"poseId": "pushup"}, {"poseId": "lunge"}, {"poseId": "situp"}, {"poseId": "plank"}
+ ]},
+ {"id": "quick", "meta": "⚡ SCHNELL-ZIRKEL", "rounds": 1, "work": 30, "rest": 10, "exercises": [
+   {"poseId": "jumpingJack"}, {"poseId": "squat"}, {"poseId": "pushup"}, {"poseId": "mountainClimber"}, {"poseId": "situp"}
+ ]}
+]

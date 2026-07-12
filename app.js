@@ -1,12 +1,19 @@
 const db = new Dexie("FlowbendDatabase");
 db.version(1).stores({ poses: "id", routines: "id" });
+db.version(2).stores({ poses: "id", routines: "id", workouts: "id" }); // Kraft-Zirkel
 
 // --- Datenquelle (einzige Quelle der Wahrheit) ---
 // Statisches Hosting: relative Dateien im data/-Ordner neben der index.html.
 // Echte API: absolute URL eintragen, z. B. "https://example.com/api/poses.json".
 const POSES_URL = "data/poses.json";
 const ROUTINES_URL = "data/routines.json";
+const WORKOUTS_URL = "data/workouts.json";
 const HISTORY_KEY = "fb_history";
+
+// Modus (Beweglichkeit / Kraft) + Intensität für generierte Zirkel.
+let mode = localStorage.getItem("fb_mode") || "flow";              // "flow" | "strength"
+let selectedIntensity = localStorage.getItem("fb_intensity") || "mittel";
+const INTENSITY = { leicht: { work: 30, rest: 20 }, mittel: { work: 35, rest: 12 }, intensiv: { work: 40, rest: 10 } };
 
 let currentRoutine = null, currentExIndex = 0, timeLeft = 0, timerId = null, isPaused = false;
 let selectedMinutes = Number(localStorage.getItem("fb_minutes")) || 10;
@@ -53,15 +60,17 @@ async function initApp() {
     statusEl.innerText = "Lade Daten...";
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 2500);
-    const [resPoses, resRoutines] = await Promise.all([
+    const [resPoses, resRoutines, resWorkouts] = await Promise.all([
       fetch(POSES_URL, { signal: controller.signal }),
-      fetch(ROUTINES_URL, { signal: controller.signal })
+      fetch(ROUTINES_URL, { signal: controller.signal }),
+      fetch(WORKOUTS_URL, { signal: controller.signal })
     ]);
     clearTimeout(timeoutId);
-    if (!resPoses.ok || !resRoutines.ok) throw new Error("HTTP " + resPoses.status + "/" + resRoutines.status);
-    await db.poses.clear(); await db.routines.clear();
+    if (!resPoses.ok || !resRoutines.ok || !resWorkouts.ok) throw new Error("HTTP " + resPoses.status + "/" + resRoutines.status + "/" + resWorkouts.status);
+    await db.poses.clear(); await db.routines.clear(); await db.workouts.clear();
     await db.poses.bulkAdd(await resPoses.json());
     await db.routines.bulkAdd(await resRoutines.json());
+    await db.workouts.bulkAdd(await resWorkouts.json());
     statusEl.innerText = "Aktualisiert (Online)";
   } catch (e) {
     // Server nicht erreichbar: vorhandenen Offline-Cache (IndexedDB) nutzen, falls vorhanden.
@@ -72,7 +81,7 @@ async function initApp() {
   }
   renderDashboardFromDB(); buildAreaUI(); updateStreak(); updateCueButton();
   document.getElementById("app-version").innerText = "v" + APP_VERSION;
-  renderSuggestion();
+  wireModeUI(); setMode(mode); // Sektion (Beweglichkeit/Kraft) + Vorschlag
 }
 
 // Genau eine Vollbild-Ansicht sichtbar schalten.
@@ -102,7 +111,7 @@ async function buildAreaUI() {
   const poses = await db.poses.toArray();
   const grid = document.getElementById("area-grid"); grid.innerHTML = "";
   AREAS.forEach(a => {
-    const n = poses.filter(p => Array.isArray(p.focus) && p.focus.includes(a.tag)).length;
+    const n = poses.filter(p => !p.circuitOnly && Array.isArray(p.focus) && p.focus.includes(a.tag)).length;
     if (!n) return;
     const b = document.createElement("button");
     b.className = "area-btn";
@@ -116,6 +125,7 @@ async function buildAreaUI() {
       selectedMinutes = Number(btn.dataset.min);
       localStorage.setItem("fb_minutes", selectedMinutes);
       document.querySelectorAll("#duration-toggle button").forEach(x => x.classList.toggle("active", x === btn));
+      updateGenSub();
     };
   });
 }
@@ -123,7 +133,7 @@ async function buildAreaUI() {
 // Baut on demand ein Programm aus allen Posen eines Bereichs und startet es.
 async function startArea(tag, label, minutes) {
   const poses = await db.poses.toArray();
-  const pool = poses.filter(p => Array.isArray(p.focus) && p.focus.includes(tag));
+  const pool = poses.filter(p => !p.circuitOnly && Array.isArray(p.focus) && p.focus.includes(tag));
   if (!pool.length) { alert("Für diesen Bereich sind keine Posen vorhanden."); return; }
   // Reihenfolge: stehend -> knien -> sitzen -> liegen (Aufwärm- zu Ausklang-Bogen).
   pool.sort((x, y) => (POSITION_RANK[x.position] ?? 9) - (POSITION_RANK[y.position] ?? 9));
@@ -147,7 +157,7 @@ async function startArea(tag, label, minutes) {
 // Spielt eine fertige Routine ab (egal ob aus DB oder generiert).
 function playRoutine(routine) {
   if (!routine) { alert("Routine nicht gefunden."); return; }
-  currentRoutine = { ...routine, exercises: expandBilateral(routine.exercises) };
+  currentRoutine = { ...routine, exercises: expandBilateral(routine.exercises), isCircuit: false };
   currentExIndex = 0; isPaused = false;
   showView("player-view");
   document.getElementById("routine-meta-title").innerText = currentRoutine.meta;
@@ -162,15 +172,32 @@ async function startRoutine(id) {
 async function loadExercise() {
   const ex = currentRoutine.exercises[currentExIndex];
   currentEx = ex;
-  document.getElementById("ex-title").innerText = ex.title;
-  document.getElementById("ex-desc").innerText = ex.desc;
-  const pose = await db.poses.get(ex.poseId); showPose(pose);
-  document.getElementById("stage").classList.toggle("mirror", ex.side === "left"); // linke Seite gespiegelt
-  document.getElementById("ex-counter").innerText = `Übung ${currentExIndex + 1} / ${currentRoutine.exercises.length}`;
+  const stage = document.getElementById("stage");
+  const player = document.getElementById("player-view");
+  document.getElementById("ex-counter").innerText = `${currentExIndex + 1} / ${currentRoutine.exercises.length}`;
   document.getElementById("progress").style.width = (currentExIndex / currentRoutine.exercises.length) * 100 + "%";
-  document.getElementById("stage").classList.remove("paused-state");
   document.getElementById("pause-btn").innerText = "Pause";
-  startPhase("prep");
+  stage.classList.remove("paused-state");
+
+  if (ex.kind === "rest") {
+    player.classList.add("resting");
+    document.getElementById("ex-title").innerText = "Pause";
+    document.getElementById("ex-desc").innerText = ex.desc || "";
+    document.getElementById("pose-image").style.display = "none";
+    document.getElementById("pose-svg").style.display = "none";
+    stage.classList.remove("has-image", "mirror"); // nur der ruhige Ring
+  } else {
+    player.classList.remove("resting");
+    document.getElementById("ex-title").innerText = ex.title;
+    document.getElementById("ex-desc").innerText = ex.desc;
+    const pose = ex.poseId ? await db.poses.get(ex.poseId) : null;
+    showPose(pose);
+    stage.classList.toggle("mirror", ex.side === "left"); // linke Seite gespiegelt
+  }
+
+  // Prep: Flows vor jeder Übung; Zirkel nur ganz am Anfang (die Pausen sind die Übergänge).
+  const doPrep = currentRoutine.isCircuit ? (currentExIndex === 0) : true;
+  startPhase(doPrep ? "prep" : "hold");
 }
 
 // Startet eine Phase (Vorbereitung oder Halten) mit fester Ziel-Endzeit.
@@ -178,19 +205,23 @@ function startPhase(newPhase) {
   phase = newPhase;
   const banner = document.getElementById("prep-banner");
   if (phase === "prep") {
-    const secs = currentEx.prepSecs ?? PREP_SECONDS;
-    banner.innerText = currentEx.side === "left"
-      ? "Seite wechseln · " + currentEx.title
-      : "Bereit machen · als Nächstes: " + currentEx.title;
+    const secs = currentEx.prepSecs ?? (currentRoutine.isCircuit ? 3 : PREP_SECONDS);
+    banner.innerText = currentRoutine.isCircuit
+      ? "Los geht's!"
+      : (currentEx.side === "left" ? "Seite wechseln · " + currentEx.title : "Bereit machen · als Nächstes: " + currentEx.title);
     banner.style.display = "block";
     phaseEndsAt = Date.now() + secs * 1000;
     tone(300, 0.08); vibrate(30);
     hideBreath();
+  } else if (currentEx.kind === "rest") {
+    banner.style.display = "none";
+    phaseEndsAt = Date.now() + currentEx.duration * 1000;
+    tone(340, 0.08); hideBreath();
   } else {
     banner.style.display = "none";
     phaseEndsAt = Date.now() + currentEx.duration * 1000;
     tone(440, 0.1); vibrate(80);
-    startBreath();
+    if (currentRoutine.isCircuit) hideBreath(); else startBreath(); // Atem-Pacing nur im Flow
   }
   updateTimeFromClock();
   clearInterval(timerId); timerId = setInterval(tick, 250);
@@ -298,8 +329,112 @@ function quitRoutine() {
   releaseWakeLock();
   hideBreath();
   document.getElementById("stage").classList.remove("mirror");
+  document.getElementById("player-view").classList.remove("resting");
   showView("dashboard-view");
   renderSuggestion(); // Vorschlag nach jeder Session auffrischen
+}
+
+// --- Modus Beweglichkeit / Kraft ---
+function setMode(m) {
+  mode = m; localStorage.setItem("fb_mode", m);
+  suggestIdx = 0;
+  document.querySelectorAll("#mode-toggle button").forEach(b => b.classList.toggle("active", b.dataset.mode === m));
+  document.getElementById("flow-sections").style.display = (m === "flow") ? "block" : "none";
+  document.getElementById("strength-sections").style.display = (m === "strength") ? "block" : "none";
+  if (m === "strength") { renderWorkouts(); updateGenSub(); }
+  renderSuggestion();
+}
+function wireModeUI() {
+  document.querySelectorAll("#mode-toggle button").forEach(b => b.onclick = () => setMode(b.dataset.mode));
+  document.querySelectorAll("#intensity-toggle button").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.int === selectedIntensity);
+    btn.onclick = () => {
+      selectedIntensity = btn.dataset.int; localStorage.setItem("fb_intensity", selectedIntensity);
+      document.querySelectorAll("#intensity-toggle button").forEach(x => x.classList.toggle("active", x === btn));
+      updateGenSub();
+    };
+  });
+}
+function updateGenSub() {
+  const el = document.getElementById("gen-sub");
+  if (el) el.innerText = `≈ ${selectedMinutes} Min · ${selectedIntensity}`;
+}
+
+// Grobe Gesamtdauer eines Zirkels (inkl. Pausen), für die Anzeige.
+function estimateWorkoutSecs(w) {
+  const n = w.exercises.length, rounds = w.rounds || 1;
+  return rounds * (n * (w.work || 30) + n * (w.rest || 10));
+}
+async function renderWorkouts() {
+  const list = document.getElementById("workout-list"); if (!list) return; list.innerHTML = "";
+  (await db.workouts.toArray()).forEach(w => {
+    const mins = Math.round(estimateWorkoutSecs(w) / 60);
+    const title = w.meta.replace(/^\s*\S+\s+/, "");
+    const card = document.createElement("div"); card.className = "routine-card";
+    card.setAttribute("onclick", `startWorkout('${w.id}')`);
+    card.innerHTML = `<div class="routine-info"><h3>${title}</h3><p>${w.rounds || 1} Runde(n) • ${w.work}s/${w.rest}s • ca. ${mins} Min</p></div><div style="color:var(--accent-warm);">➔</div>`;
+    list.appendChild(card);
+  });
+}
+
+async function startWorkout(id) {
+  const w = await db.workouts.get(id);
+  playCircuit(w);
+}
+
+// Baut aus Kraft-Posen einen Zufalls-Zirkel (Dauer aus selectedMinutes, Tempo aus Intensität).
+async function startGeneratedCircuit() {
+  const poses = await db.poses.toArray();
+  const pool = poses.filter(p => p.circuitOnly || (Array.isArray(p.focus) && p.focus.includes("strength")));
+  if (!pool.length) { alert("Keine Kraft-Übungen vorhanden."); return; }
+  const seed = new Date().setHours(0, 0, 0, 0);
+  pool.sort((a, b) => (hash(a.id + seed) % 1000) - (hash(b.id + seed) % 1000)); // deterministisch je Tag
+  const { work, rest } = INTENSITY[selectedIntensity] || INTENSITY.mittel;
+  const stations = Math.min(pool.length, 6);
+  const rounds = Math.max(1, Math.round((selectedMinutes * 60) / (stations * (work + rest))));
+  const exercises = pool.slice(0, stations).map(p => ({ poseId: p.id }));
+  playCircuit({ id: "gen", meta: `🎯 Zirkel · ${selectedMinutes} Min · ${selectedIntensity}`, rounds, work, rest, exercises });
+}
+function hash(s) { s = String(s); let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
+
+async function playCircuit(w) {
+  if (!w) { alert("Zirkel nicht gefunden."); return; }
+  const ids = [...new Set(w.exercises.map(e => e.poseId))];
+  const map = {};
+  (await Promise.all(ids.map(id => db.poses.get(id)))).forEach(p => { if (p) map[p.id] = p; });
+  currentRoutine = { id: "circuit-" + w.id, meta: w.meta, exercises: expandCircuit(w, map), isCircuit: true };
+  currentExIndex = 0; isPaused = false;
+  showView("player-view");
+  document.getElementById("routine-meta-title").innerText = w.meta;
+  requestWakeLock();
+  loadExercise();
+}
+
+// Zirkel in Segmente auflösen: Arbeit (evtl. rechts/links) + Pause dazwischen, über alle Runden.
+function expandCircuit(w, map) {
+  const out = [], rounds = w.rounds || 1;
+  for (let r = 0; r < rounds; r++) {
+    w.exercises.forEach((ex, i) => {
+      const p = map[ex.poseId] || {};
+      const workSecs = ex.work || w.work || 30;
+      const title = ex.title || p.nameDe || p.name || ex.poseId;
+      const desc = p.cue || "Kraftvoll und sauber ausführen.";
+      if (BILATERAL.has(ex.poseId)) {
+        const right = Math.max(8, Math.round(workSecs / 2));
+        out.push({ kind: "work", title: title + " (rechts)", desc, duration: right, poseId: ex.poseId, side: "right" });
+        out.push({ kind: "work", title: title + " (links)", desc, duration: Math.max(8, workSecs - right), poseId: ex.poseId, side: "left" });
+      } else {
+        out.push({ kind: "work", title, desc, duration: workSecs, poseId: ex.poseId });
+      }
+      const isLast = (r === rounds - 1) && (i === w.exercises.length - 1);
+      if (!isLast) {
+        const nx = w.exercises[(i + 1) % w.exercises.length];
+        const nxTitle = nx.title || (map[nx.poseId] && map[nx.poseId].nameDe) || nx.poseId;
+        out.push({ kind: "rest", title: "Pause", desc: "Gleich: " + nxTitle, duration: ex.rest || w.rest || 10, poseId: null });
+      }
+    });
+  }
+  return out;
 }
 
 // --- "Was heute?" – adaptiver Vorschlag ---
@@ -331,6 +466,18 @@ function buildCandidates() {
 }
 
 async function renderSuggestion() {
+  const card = document.getElementById("suggest-card");
+  if (mode === "strength") {
+    const ws = await db.workouts.toArray();
+    if (!ws.length) { card.style.display = "none"; return; }
+    suggestCands = ws.map(w => ({ type: "workout", id: w.id }));
+    if (suggestIdx >= suggestCands.length) suggestIdx = 0;
+    const w = ws[suggestIdx];
+    document.getElementById("sug-title").innerText = `${w.meta.replace(/^\s*\S+\s+/, "")} · ${w.rounds || 1} Runde(n)`;
+    document.getElementById("sug-reason").innerText = "Kraft-Zirkel für heute";
+    card.style.display = "flex";
+    return;
+  }
   suggestCands = buildCandidates();
   if (suggestIdx >= suggestCands.length) suggestIdx = 0;
   const c = suggestCands[suggestIdx];
@@ -351,7 +498,8 @@ async function renderSuggestion() {
 function startSuggestion() {
   const c = suggestCands[suggestIdx];
   if (!c) return;
-  if (c.type === "area") startArea(c.tag, c.label, selectedMinutes);
+  if (c.type === "workout") startWorkout(c.id);
+  else if (c.type === "area") startArea(c.tag, c.label, selectedMinutes);
   else startRoutine(c.id);
 }
 
@@ -511,7 +659,7 @@ function updateStreak() {
 }
 
 // --- App-Version + Update-Fluss (PWA, mit Nachfrage) ---
-const APP_VERSION = "1.1.0"; // wird beim Release automatisch auf den Tag gesetzt
+const APP_VERSION = "1.2.0"; // wird beim Release automatisch auf den Tag gesetzt
 let pendingReg = null, updateInitiated = false;
 
 function showUpdateBanner(reg) { pendingReg = reg; updateBannerVisibility(); }

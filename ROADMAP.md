@@ -23,6 +23,8 @@ Rahmen funktionieren.
 - **Update**: In-App-Update mit Nachfrage + Versionsanzeige, Auto-Stempelung im Release (v1.0.9)
 - **Verlauf & Vorschlag**: Statistik-Ansicht (Heatmap, Streak, Rekord) + adaptiver
   „Was heute?"-Vorschlag aus dem lokalen Verlauf (v1.1.0)
+- **Kraft-Modus**: Umschalter Beweglichkeit/Kraft, getimte Zirkel (Arbeit/Pause/Runden),
+  Zirkel-Generator (Dauer/Intensität), 6 neue Kraft-Übungen (v1.2.0)
 
 ---
 

@@ -103,7 +103,7 @@
         --accent-light: #2e2621;
         --track: #37322e;
       }
-      .duration-toggle button, .area-btn, .routine-card { background: #2b2826; border-color: #37322e; }
+      .duration-toggle button, .mode-toggle button, .area-btn, .routine-card { background: #2b2826; border-color: #37322e; }
       .btn-secondary { background: #322e2b; color: var(--text-main); }
       .progress-bar-container { background: #37322e; }
       .scroll-area::-webkit-scrollbar-thumb { background: #3a3430; }
@@ -128,6 +128,10 @@
     .hm-l3 { background: rgba(217,119,54,0.92); }
     .hm-legend { display: flex; align-items: center; gap: 4px; justify-content: flex-end; margin-top: 10px; font-size: 0.66rem; color: var(--text-sub); }
     .hm-legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+    .mode-toggle { display: flex; gap: 8px; margin: 0 0 18px; }
+    .mode-toggle button { flex: 1; border: 1px solid #f2efeb; background: #fff; border-radius: 16px; padding: 12px; font-size: 0.95rem; font-weight: 600; color: var(--text-sub); cursor: pointer; transition: all 0.25s ease; }
+    .mode-toggle button.active { background: var(--accent-warm); color: #fff; border-color: var(--accent-warm); }
+    #player-view.resting .time-display, #player-view.resting .exercise-title { color: #3a9d6e; }
   </style>
   <script src="vendor/dexie.min.js"></script>
 </head>
@@ -144,6 +148,10 @@
     </div>
     <div class="streak-badge" onclick="showStats()" style="cursor:pointer;">⚡ <span id="streak-count">0</span> Tage in Folge · Verlauf ›</div>
     <div id="db-status" class="status-indicator">Initialisiere...</div>
+    <div class="mode-toggle" id="mode-toggle">
+      <button data-mode="flow" class="active">🧘 Beweglichkeit</button>
+      <button data-mode="strength">💪 Kraft</button>
+    </div>
     <div class="scroll-area">
       <div id="suggest-card" onclick="startSuggestion()">
         <div>
@@ -153,15 +161,30 @@
         </div>
         <button class="sug-shuffle" onclick="shuffleSuggestion(event)" title="Anderer Vorschlag">🔀</button>
       </div>
-      <div class="section-label">Nach Bereich</div>
-      <div class="duration-toggle" id="duration-toggle">
-        <button data-min="5">5 Min</button>
-        <button data-min="10" class="active">10 Min</button>
-        <button data-min="15">15 Min</button>
+      <div id="flow-sections">
+        <div class="section-label">Nach Bereich</div>
+        <div class="duration-toggle" id="duration-toggle">
+          <button data-min="5">5 Min</button>
+          <button data-min="10" class="active">10 Min</button>
+          <button data-min="15">15 Min</button>
+        </div>
+        <div class="area-grid" id="area-grid"></div>
+        <div class="section-label" style="margin-top: 22px;">Fertige Routinen</div>
+        <div class="routine-list"></div>
       </div>
-      <div class="area-grid" id="area-grid"></div>
-      <div class="section-label" style="margin-top: 22px;">Fertige Routinen</div>
-      <div class="routine-list"></div>
+      <div id="strength-sections" style="display:none;">
+        <div class="section-label">Zirkel bauen</div>
+        <div class="duration-toggle" id="intensity-toggle">
+          <button data-int="leicht">Leicht</button>
+          <button data-int="mittel" class="active">Mittel</button>
+          <button data-int="intensiv">Intensiv</button>
+        </div>
+        <div class="area-grid">
+          <button class="area-btn" onclick="startGeneratedCircuit()">Zufalls-Zirkel<small id="gen-sub">…</small></button>
+        </div>
+        <div class="section-label" style="margin-top: 22px;">Fertige Zirkel</div>
+        <div class="routine-list" id="workout-list"></div>
+      </div>
     </div>
     <div class="app-footer"><a href="#" onclick="showDisclaimer(); return false;">Hinweis · kein medizinischer Rat</a></div>
   </div>
