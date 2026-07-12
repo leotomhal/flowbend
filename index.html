@@ -103,7 +103,7 @@
         --accent-light: #2e2621;
         --track: #37322e;
       }
-      .duration-toggle button, .mode-toggle button, .area-btn, .routine-card { background: #2b2826; border-color: #37322e; }
+      .duration-toggle button, .mode-toggle button, .area-btn, .routine-card, .quiet-toggle { background: #2b2826; border-color: #37322e; }
       .btn-secondary { background: #322e2b; color: var(--text-main); }
       .progress-bar-container { background: #37322e; }
       .scroll-area::-webkit-scrollbar-thumb { background: #3a3430; }
@@ -132,6 +132,8 @@
     .mode-toggle button { flex: 1; border: 1px solid #f2efeb; background: #fff; border-radius: 16px; padding: 12px; font-size: 0.95rem; font-weight: 600; color: var(--text-sub); cursor: pointer; transition: all 0.25s ease; }
     .mode-toggle button.active { background: var(--accent-warm); color: #fff; border-color: var(--accent-warm); }
     #player-view.resting .time-display, #player-view.resting .exercise-title { color: #3a9d6e; }
+    .quiet-toggle { width: 100%; border: 1px solid #f2efeb; background: #fff; border-radius: 16px; padding: 12px; font-size: 0.9rem; font-weight: 600; color: var(--text-sub); cursor: pointer; margin-bottom: 16px; transition: all 0.25s ease; }
+    .quiet-toggle.active { background: #3a9d6e; color: #fff; border-color: #3a9d6e; }
   </style>
   <script src="vendor/dexie.min.js"></script>
 </head>
@@ -179,6 +181,7 @@
           <button data-int="mittel" class="active">Mittel</button>
           <button data-int="intensiv">Intensiv</button>
         </div>
+        <button id="quiet-toggle" class="quiet-toggle" onclick="toggleQuiet()" title="Laute/springende Übungen weglassen">🤫 Leise-Modus</button>
         <div class="area-grid">
           <button class="area-btn" onclick="startGeneratedCircuit()">Zufalls-Zirkel<small id="gen-sub">…</small></button>
         </div>

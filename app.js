@@ -13,6 +13,7 @@ const HISTORY_KEY = "fb_history";
 // Modus (Beweglichkeit / Kraft) + Intensität für generierte Zirkel.
 let mode = localStorage.getItem("fb_mode") || "flow";              // "flow" | "strength"
 let selectedIntensity = localStorage.getItem("fb_intensity") || "mittel";
+let quietMode = localStorage.getItem("fb_quiet") === "1";          // "Nachbarn nicht ärgern": laute Übungen raus
 const INTENSITY = { leicht: { work: 30, rest: 20 }, mittel: { work: 35, rest: 12 }, intensiv: { work: 40, rest: 10 } };
 
 let currentRoutine = null, currentExIndex = 0, timeLeft = 0, timerId = null, isPaused = false;
@@ -354,10 +355,27 @@ function wireModeUI() {
       updateGenSub();
     };
   });
+  updateQuietButton();
 }
 function updateGenSub() {
   const el = document.getElementById("gen-sub");
-  if (el) el.innerText = `≈ ${selectedMinutes} Min · ${selectedIntensity}`;
+  if (el) el.innerText = `≈ ${selectedMinutes} Min · ${selectedIntensity}${quietMode ? " · 🤫 leise" : ""}`;
+}
+
+// "Nachbarn nicht ärgern": laute Übungen (loud) aus Zirkeln ausblenden.
+function toggleQuiet() {
+  quietMode = !quietMode;
+  localStorage.setItem("fb_quiet", quietMode ? "1" : "0");
+  updateQuietButton(); renderWorkouts(); updateGenSub();
+}
+function updateQuietButton() {
+  const b = document.getElementById("quiet-toggle");
+  if (b) { b.classList.toggle("active", quietMode); b.innerText = quietMode ? "🤫 Leise-Modus: an" : "🤫 Leise-Modus"; }
+}
+function quietFilter(exercises, map) {
+  if (!quietMode) return exercises;
+  const q = exercises.filter(e => !(map[e.poseId] && map[e.poseId].loud));
+  return q.length ? q : exercises; // nie ganz leeren Zirkel erzeugen
 }
 
 // Grobe Gesamtdauer eines Zirkels (inkl. Pausen), für die Anzeige.
@@ -367,12 +385,15 @@ function estimateWorkoutSecs(w) {
 }
 async function renderWorkouts() {
   const list = document.getElementById("workout-list"); if (!list) return; list.innerHTML = "";
+  const loudIds = new Set((await db.poses.toArray()).filter(p => p.loud).map(p => p.id));
   (await db.workouts.toArray()).forEach(w => {
     const mins = Math.round(estimateWorkoutSecs(w) / 60);
     const title = w.meta.replace(/^\s*\S+\s+/, "");
+    const hasLoud = w.exercises.some(e => loudIds.has(e.poseId));
+    const badge = hasLoud ? (quietMode ? " • 🤫 leise Version" : " • 🔊 laut") : "";
     const card = document.createElement("div"); card.className = "routine-card";
     card.setAttribute("onclick", `startWorkout('${w.id}')`);
-    card.innerHTML = `<div class="routine-info"><h3>${title}</h3><p>${w.rounds || 1} Runde(n) • ${w.work}s/${w.rest}s • ca. ${mins} Min</p></div><div style="color:var(--accent-warm);">➔</div>`;
+    card.innerHTML = `<div class="routine-info"><h3>${title}</h3><p>${w.rounds || 1} Runde(n) • ${w.work}s/${w.rest}s • ca. ${mins} Min${badge}</p></div><div style="color:var(--accent-warm);">➔</div>`;
     list.appendChild(card);
   });
 }
@@ -385,7 +406,7 @@ async function startWorkout(id) {
 // Baut aus Kraft-Posen einen Zufalls-Zirkel (Dauer aus selectedMinutes, Tempo aus Intensität).
 async function startGeneratedCircuit() {
   const poses = await db.poses.toArray();
-  const pool = poses.filter(p => p.circuitOnly || (Array.isArray(p.focus) && p.focus.includes("strength")));
+  const pool = poses.filter(p => (p.circuitOnly || (Array.isArray(p.focus) && p.focus.includes("strength"))) && !(quietMode && p.loud));
   if (!pool.length) { alert("Keine Kraft-Übungen vorhanden."); return; }
   const seed = new Date().setHours(0, 0, 0, 0);
   pool.sort((a, b) => (hash(a.id + seed) % 1000) - (hash(b.id + seed) % 1000)); // deterministisch je Tag
@@ -402,7 +423,8 @@ async function playCircuit(w) {
   const ids = [...new Set(w.exercises.map(e => e.poseId))];
   const map = {};
   (await Promise.all(ids.map(id => db.poses.get(id)))).forEach(p => { if (p) map[p.id] = p; });
-  currentRoutine = { id: "circuit-" + w.id, meta: w.meta, exercises: expandCircuit(w, map), isCircuit: true };
+  const exs = quietFilter(w.exercises, map); // im Leise-Modus laute Übungen weglassen
+  currentRoutine = { id: "circuit-" + w.id, meta: w.meta, exercises: expandCircuit({ ...w, exercises: exs }, map), isCircuit: true };
   currentExIndex = 0; isPaused = false;
   showView("player-view");
   document.getElementById("routine-meta-title").innerText = w.meta;
@@ -659,7 +681,7 @@ function updateStreak() {
 }
 
 // --- App-Version + Update-Fluss (PWA, mit Nachfrage) ---
-const APP_VERSION = "1.2.0"; // wird beim Release automatisch auf den Tag gesetzt
+const APP_VERSION = "1.2.1"; // wird beim Release automatisch auf den Tag gesetzt
 let pendingReg = null, updateInitiated = false;
 
 function showUpdateBanner(reg) { pendingReg = reg; updateBannerVisibility(); }

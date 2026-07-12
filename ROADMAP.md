@@ -24,7 +24,8 @@ Rahmen funktionieren.
 - **Verlauf & Vorschlag**: Statistik-Ansicht (Heatmap, Streak, Rekord) + adaptiver
   „Was heute?"-Vorschlag aus dem lokalen Verlauf (v1.1.0)
 - **Kraft-Modus**: Umschalter Beweglichkeit/Kraft, getimte Zirkel (Arbeit/Pause/Runden),
-  Zirkel-Generator (Dauer/Intensität), 6 neue Kraft-Übungen (v1.2.0)
+  Zirkel-Generator (Dauer/Intensität), 6 neue Kraft-Übungen (v1.2.0);
+  **Leise-Modus** („Nachbarn nicht ärgern") blendet laute Übungen aus (v1.2.1)
 
 ---
 
