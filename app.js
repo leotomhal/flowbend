@@ -187,7 +187,6 @@ function startPhase(newPhase) {
     banner.style.display = "none";
     phaseEndsAt = Date.now() + currentEx.duration * 1000;
     tone(440, 0.1); vibrate(80);
-    speak(currentEx.title);
     startBreath();
   }
   updateTimeFromClock();
@@ -201,7 +200,7 @@ function tick() {
 
 // Restzeit aus der Ziel-Endzeit ableiten -> selbstkorrigierend nach Hintergrund/Sleep.
 function updateTimeFromClock() {
-  const remaining = Math.max(0, Math.round((phaseEndsAt - Date.now()) / 1000));
+  const remaining = Math.max(0, Math.ceil((phaseEndsAt - Date.now()) / 1000));
   const prev = timeLeft;
   timeLeft = remaining; formatTimeDisplay(remaining);
   if (phase === "hold" && remaining <= 3 && remaining > 0 && remaining !== prev) tone(380, 0.05);
@@ -345,17 +344,6 @@ function tone(f, d) {
 
 function vibrate(pattern) {
   if (cuesOn && navigator.vibrate) { try { navigator.vibrate(pattern); } catch (e) {} }
-}
-
-// Sprachansage der aktuellen Übung (folgt dem Ton/Vibration-Schalter).
-function speak(text) {
-  if (!cuesOn || !("speechSynthesis" in window)) return;
-  try {
-    const u = new SpeechSynthesisUtterance(text.replace(/\(([^)]+)\)/, "$1")); // "(rechts)" -> "rechts"
-    u.lang = "de-DE"; u.rate = 0.95;
-    speechSynthesis.cancel();
-    speechSynthesis.speak(u);
-  } catch (e) { /* Sprachausgabe nicht verfügbar. */ }
 }
 
 // Atem-Pacing: 4 s einatmen, 6 s ausatmen – nur während des Haltens.
