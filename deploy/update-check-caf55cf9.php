@@ -26,7 +26,10 @@ $WEBROOT    = __DIR__;                               // Zielordner = Ordner dies
 $GITHUB_TOKEN = '';
 // -----------------------------------------------------------------
 
-header('Content-Type: text/plain; charset=utf-8');
+// text/html + inline: manche Browser laden text/plain auf einer .php-URL herunter,
+// statt es anzuzeigen. Reiner Text bleibt lesbar.
+header('Content-Type: text/html; charset=utf-8');
+header('Content-Disposition: inline');
 
 // Zugriffsschutz: ohne korrekten Key kein Zugriff (Endpoint ist öffentlich erreichbar).
 if (!hash_equals($SECRET_KEY, (string)($_GET['key'] ?? ''))) {
