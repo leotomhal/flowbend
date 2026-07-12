@@ -681,7 +681,7 @@ function updateStreak() {
 }
 
 // --- App-Version + Update-Fluss (PWA, mit Nachfrage) ---
-const APP_VERSION = "1.2.1"; // wird beim Release automatisch auf den Tag gesetzt
+const APP_VERSION = "1.2.2"; // wird beim Release automatisch auf den Tag gesetzt
 let pendingReg = null, updateInitiated = false;
 
 function showUpdateBanner(reg) { pendingReg = reg; updateBannerVisibility(); }
