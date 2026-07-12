@@ -35,7 +35,7 @@ data/routines.json┴─►  fetch (beim Start)  ─►  IndexedDB (Dexie)  ─�
 | `data/routines.json` | 15 kuratierte Routinen |
 | `vendor/dexie.min.js` | IndexedDB-Wrapper, lokal gevendored (kein CDN) |
 | `img/<id>.webp` | Pose-Bilder (WebP, aus PNG konvertiert) |
-| `img/icon-192.png`, `img/icon-512.png`, `img/icon.svg` | App-/Browser-Icons |
+| `img/icon-192.png`, `img/icon-512.png` | App-/Browser-Icons |
 | `tools/check-data.py` | Invariantencheck (CI: poseIds & Bilder vorhanden) |
 
 ## 3. Datenmodell
