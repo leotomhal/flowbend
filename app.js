@@ -271,6 +271,88 @@ function finishRoutine() {
   showView("done-view");
 }
 
+// Fortschritts-Karte: rendert die Session-Kennzahlen als teilbares Bild.
+// Rein clientseitig (Canvas), kein Backend. Werte kommen aus der done-view,
+// stimmen also genau mit dem Bildschirm ueberein.
+function renderCard() {
+  const S = 1080, c = document.createElement("canvas");
+  c.width = S; c.height = S;
+  const g = c.getContext("2d");
+
+  // Hintergrund: warmer Verlauf im flowbend-Look
+  const bg = g.createLinearGradient(0, 0, S, S);
+  bg.addColorStop(0, "#fdf6f0"); bg.addColorStop(1, "#f6ede4");
+  g.fillStyle = bg; g.fillRect(0, 0, S, S);
+
+  const warm = "#d97736", main = "#2c2a29", sub = "#96918e";
+  const cx = S / 2;
+  g.textAlign = "center";
+
+  // Wordmark + Tagline
+  g.fillStyle = main;
+  g.font = "700 76px -apple-system, 'Segoe UI', Roboto, sans-serif";
+  g.fillText("flowbend", cx, 190);
+  g.fillStyle = sub;
+  g.font = "500 26px -apple-system, 'Segoe UI', Roboto, sans-serif";
+  g.fillText((mode === "strength" ? "KRAFT" : "BEWEGLICHKEIT") + "  ·  GESCHAFFT", cx, 240);
+
+  // Streak-Emoji gross
+  const streak = document.getElementById("done-streak").innerText;
+  g.font = "160px -apple-system, 'Segoe UI', Roboto, sans-serif";
+  g.fillText("🔥", cx, 470);
+
+  // Kennzahlen: Uebungen | Minuten | Streak
+  const stats = [
+    [document.getElementById("done-ex").innerText, "Übungen"],
+    [document.getElementById("done-min").innerText, "Minuten"],
+    [streak, "Tage Streak"],
+  ];
+  const colW = S / 3;
+  stats.forEach((s, i) => {
+    const x = colW * i + colW / 2;
+    g.fillStyle = warm;
+    g.font = "700 96px -apple-system, 'Segoe UI', Roboto, sans-serif";
+    g.fillText(s[0], x, 680);
+    g.fillStyle = sub;
+    g.font = "500 30px -apple-system, 'Segoe UI', Roboto, sans-serif";
+    g.fillText(s[1], x, 730);
+  });
+
+  // Datum
+  g.fillStyle = main;
+  g.font = "500 34px -apple-system, 'Segoe UI', Roboto, sans-serif";
+  g.fillText(new Date().toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" }), cx, 900);
+
+  // Footer-URL
+  g.fillStyle = sub;
+  g.font = "500 28px -apple-system, 'Segoe UI', Roboto, sans-serif";
+  g.fillText("bend.fitmitbauch.de", cx, 990);
+
+  return c;
+}
+
+async function shareCard() {
+  const btn = document.getElementById("share-card-btn");
+  const canvas = renderCard();
+  const blob = await new Promise(res => canvas.toBlob(res, "image/png"));
+  if (!blob) return;
+  const file = new File([blob], "flowbend.png", { type: "image/png" });
+
+  // Web Share API (mobil/PWA) mit Datei, wenn moeglich – sonst Download-Fallback.
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: "flowbend", text: "Session geschafft 🔥" });
+      return;
+    } catch (e) { if (e && e.name === "AbortError") return; } // Nutzer hat abgebrochen
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "flowbend.png";
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  if (btn) { const t = btn.innerText; btn.innerText = "Gespeichert ✓"; setTimeout(() => (btn.innerText = t), 1800); }
+}
+
 // Trainierte Bereiche (focus-Tags) mit Zeitstempel merken.
 async function recordFocus(routine) {
   const ids = [...new Set(routine.exercises.map(e => e.poseId))];
@@ -681,7 +763,7 @@ function updateStreak() {
 }
 
 // --- App-Version + Update-Fluss (PWA, mit Nachfrage) ---
-const APP_VERSION = "1.3.0"; // wird beim Release automatisch auf den Tag gesetzt
+const APP_VERSION = "1.4.0"; // wird beim Release automatisch auf den Tag gesetzt
 let pendingReg = null, updateInitiated = false;
 
 function showUpdateBanner(reg) { pendingReg = reg; updateBannerVisibility(); }

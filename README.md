@@ -28,6 +28,7 @@ Wake-Lock, Atem-Pacing, Ton/Vibration und Pose-Bildern führt durch die Übungen
 **Player & Komfort**
 - Zeitstempel-Timer + **Screen Wake Lock** (Bildschirm bleibt an), „Bereit machen"-Countdown, Übungszähler, Zurück/Weiter, Ton/Vibration-Schalter.
 - **Verlauf/Statistik** (Heatmap, Streak, Rekord, Minuten) und adaptiver **„Was heute?"-Vorschlag** aus dem lokalen Verlauf.
+- **Teilbare Fortschritts-Karte**: nach der Session eine Canvas-Karte (Übungen · Minuten · 🔥 Streak) per **Web Share** teilen oder als PNG speichern.
 - **Dark Mode** (automatisch), **Streak**, medizinischer Hinweis.
 
 **Technik**

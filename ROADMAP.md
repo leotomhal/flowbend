@@ -8,7 +8,7 @@ Rahmen funktionieren.
 
 ---
 
-## ✅ Bereits ausgeliefert (v1.0.0 – v1.3.0)
+## ✅ Bereits ausgeliefert (v1.0.0 – v1.4.0)
 
 - Rebrand ZenFlow → flowbend, lokal gevendortes Dexie, README/Doku
 - **PWA**: Manifest, Service Worker (offline), installierbar, eigenes App-Icon (Android/iOS)
@@ -28,6 +28,9 @@ Rahmen funktionieren.
   **Leise-Modus** („Nachbarn nicht ärgern") blendet laute Übungen aus (v1.2.1);
   **10 weitere Kraft-Übungen** (jetzt 16) + 4 neue Zirkel – HIIT, Core (leise),
   Bein- und Oberkörper-Zirkel (v1.3.0)
+- **Teilbare Fortschritts-Karte**: nach der Session eine Canvas-Karte
+  (Übungen · Minuten · 🔥 Streak) via Web Share teilen oder als PNG speichern;
+  Footer mit Repo-Link + Kontakt (v1.4.0)
 
 ---
 
@@ -86,10 +89,10 @@ Ein eigener Zen-Modus mit einer schön animierten Atemkugel, die sich im 4/6-Rhy
 zusammenzieht – optional mit **generativem Ambient-Sound aus der WebAudio-API** (keine Audiodateien,
 offline). Auch als eigenständige „1 Minute durchatmen"-Kachel.
 
-### 4. Teilbare Fortschritts-Karte
-Nach einer Session (oder für die Streak) wird per **Canvas eine hübsche Zusammenfassungs-Karte**
-gerendert (Übungen · Minuten · 🔥 Streak · Badge) und lässt sich als Bild speichern/teilen –
-Motivation zum Weitermachen, ganz ohne Social-Backend.
+### 4. Teilbare Fortschritts-Karte ✅ (v1.4.0)
+Umgesetzt: nach einer Session wird per **Canvas eine Zusammenfassungs-Karte** (1080×1080)
+gerendert (Übungen · Minuten · 🔥 Streak · Datum). „Karte teilen" nutzt die **Web Share API**
+(mobil/PWA) mit Download-Fallback am Desktop – ganz ohne Social-Backend.
 
 ### 5. Tägliche Challenge
 Ein **datums-gesätes** Mini-Programm (`Seed = Datum`): alle bekommen am selben Tag dieselbe
