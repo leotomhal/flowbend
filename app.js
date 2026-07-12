@@ -20,6 +20,7 @@ let phaseEndsAt = 0;      // Ziel-Endzeitpunkt der aktuellen Phase (ms)
 let pausedRemaining = 0;  // Restzeit beim Pausieren (ms)
 let currentEx = null;     // aktuell laufende (evtl. seiten-spezifische) Übung
 let wakeLock = null;      // Screen Wake Lock
+let breathId = null, breathBase = 0; // Atem-Pacing (Einatmen/Ausatmen)
 
 // Einseitige Posen: im Ablauf automatisch beide Seiten (rechts + links), zweite gespiegelt.
 const BILATERAL = new Set([
@@ -181,10 +182,13 @@ function startPhase(newPhase) {
     banner.style.display = "block";
     phaseEndsAt = Date.now() + secs * 1000;
     tone(300, 0.08); vibrate(30);
+    hideBreath();
   } else {
     banner.style.display = "none";
     phaseEndsAt = Date.now() + currentEx.duration * 1000;
     tone(440, 0.1); vibrate(80);
+    speak(currentEx.title);
+    startBreath();
   }
   updateTimeFromClock();
   clearInterval(timerId); timerId = setInterval(tick, 250);
@@ -226,6 +230,7 @@ function finishRoutine() {
     Math.round(currentRoutine.exercises.reduce((s, e) => s + e.duration, 0) / 60);
   document.getElementById("done-streak").innerText = document.getElementById("streak-count").innerText;
   document.getElementById("stage").classList.remove("mirror");
+  hideBreath();
   tone(660, 0.15); vibrate([60, 40, 120]);
   showView("done-view");
 }
@@ -261,10 +266,12 @@ function togglePause() {
   isPaused = !isPaused;
   if (isPaused) {
     pausedRemaining = Math.max(0, phaseEndsAt - Date.now());
+    stopBreath();
   } else {
     phaseEndsAt = Date.now() + pausedRemaining; // Ziel-Endzeit um die Pausendauer verschieben
     requestWakeLock();
     updateTimeFromClock();
+    if (phase === "hold") startBreath();
   }
   document.getElementById("stage").classList.toggle("paused-state", isPaused);
   document.getElementById("pause-btn").innerText = isPaused ? "Weiter" : "Pause";
@@ -273,6 +280,7 @@ function togglePause() {
 function quitRoutine() {
   clearInterval(timerId);
   releaseWakeLock();
+  hideBreath();
   document.getElementById("stage").classList.remove("mirror");
   showView("dashboard-view");
 }
@@ -338,6 +346,31 @@ function tone(f, d) {
 function vibrate(pattern) {
   if (cuesOn && navigator.vibrate) { try { navigator.vibrate(pattern); } catch (e) {} }
 }
+
+// Sprachansage der aktuellen Übung (folgt dem Ton/Vibration-Schalter).
+function speak(text) {
+  if (!cuesOn || !("speechSynthesis" in window)) return;
+  try {
+    const u = new SpeechSynthesisUtterance(text.replace(/\(([^)]+)\)/, "$1")); // "(rechts)" -> "rechts"
+    u.lang = "de-DE"; u.rate = 0.95;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  } catch (e) { /* Sprachausgabe nicht verfügbar. */ }
+}
+
+// Atem-Pacing: 4 s einatmen, 6 s ausatmen – nur während des Haltens.
+function startBreath() {
+  stopBreath();
+  const cue = document.getElementById("breath-cue");
+  cue.style.display = "block";
+  const IN = 4000, CYCLE = 10000;
+  breathBase = Date.now();
+  const upd = () => { cue.innerText = (Date.now() - breathBase) % CYCLE < IN ? "Einatmen" : "Ausatmen"; };
+  upd();
+  breathId = setInterval(upd, 250);
+}
+function stopBreath() { clearInterval(breathId); breathId = null; }
+function hideBreath() { stopBreath(); document.getElementById("breath-cue").style.display = "none"; }
 
 // Ton + Vibration gemeinsam an/aus (im Player, oben rechts).
 function toggleCues() {

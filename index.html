@@ -88,6 +88,23 @@
     .done-stat { background: var(--accent-light); border-radius: 18px; padding: 16px 8px; flex: 1; }
     .done-stat b { display: block; font-size: 1.7rem; font-weight: 500; color: var(--accent-warm); }
     .done-stat span { font-size: 0.7rem; color: var(--text-sub); text-transform: uppercase; letter-spacing: 1px; }
+    #breath-cue { display: none; font-size: 0.8rem; letter-spacing: 3px; text-transform: uppercase; color: var(--accent-warm); min-height: 1.1em; margin-bottom: 6px; transition: opacity 0.5s ease; }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #1a1918;
+        --card-bg: #232120;
+        --text-main: #f0ece9;
+        --text-sub: #9a938e;
+        --accent-warm: #e5904a;
+        --accent-light: #2e2621;
+      }
+      .duration-toggle button, .area-btn, .routine-card { background: #2b2826; border-color: #37322e; }
+      .btn-secondary { background: #322e2b; color: var(--text-main); }
+      .progress-bar-container { background: #37322e; }
+      .scroll-area::-webkit-scrollbar-thumb { background: #3a3430; }
+      .app-footer a { border-bottom-color: #37322e; }
+      .app-container { border-color: rgba(229, 144, 74, 0.08); }
+    }
   </style>
   <script src="vendor/dexie.min.js"></script>
 </head>
@@ -142,6 +159,7 @@
       <div class="exercise-title" id="ex-title">Übung</div>
       <div class="exercise-desc" id="ex-desc">Beschreibung...</div>
     </div>
+    <div id="breath-cue"></div>
     <div class="time-display" id="time-display">00:00</div>
     <div class="controls">
       <button class="btn btn-secondary" onclick="quitRoutine()">Abbrechen</button>

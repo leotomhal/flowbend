@@ -1,8 +1,8 @@
 name: Optimize Images
 
-# Läuft automatisch, wenn du Bilder nach img/ pushst (z. B. per GitHub-App).
-# Verkleinert sie auf max. 800 px (lange Kante), strippt Metadaten und
-# komprimiert PNGs – und committet die verkleinerten Fassungen zurück.
+# Läuft, wenn Bilder nach img/ gepusht werden. Verkleinert NUR die im Push
+# geänderten Bilder (max. 800 px, Metadaten strippen, PNGs komprimieren) und
+# committet sie zurück – so wird nicht bei jedem Push der ganze Ordner neu kodiert.
 on:
   push:
     paths:
@@ -20,21 +20,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # volle Historie, damit der Diff gegen den Vorzustand geht
+
+      - name: Geänderte Bilder ermitteln
+        id: changed
+        run: |
+          BEFORE="${{ github.event.before }}"
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            FILES=$(ls img/*.png img/*.jpg img/*.jpeg 2>/dev/null || true)   # neuer Branch -> alle
+          else
+            FILES=$(git diff --name-only "$BEFORE" "${{ github.sha }}" -- 'img/*.png' 'img/*.jpg' 'img/*.jpeg' || true)
+          fi
+          OUT=""
+          for f in $FILES; do [ -f "$f" ] && OUT="$OUT $f"; done   # gelöschte auslassen
+          echo "files=$OUT" >> "$GITHUB_OUTPUT"
+          echo "Zu optimieren:$OUT"
 
       - name: Tools installieren
+        if: steps.changed.outputs.files != ''
         run: sudo apt-get -qq update && sudo apt-get -qq install -y imagemagick pngquant
 
       - name: Verkleinern & komprimieren
+        if: steps.changed.outputs.files != ''
         run: |
-          shopt -s nullglob
-          for f in img/*.png img/*.jpg img/*.jpeg; do
+          for f in ${{ steps.changed.outputs.files }}; do
             convert "$f" -resize '800x800>' -strip -quality 82 "$f"
-          done
-          for f in img/*.png; do
-            pngquant --force --skip-if-larger --quality=65-90 --output "$f" "$f" || true
+            case "$f" in
+              *.png) pngquant --force --skip-if-larger --quality=65-90 --output "$f" "$f" || true ;;
+            esac
           done
 
       - name: Zurück-Commit (nur bei Änderungen)
+        if: steps.changed.outputs.files != ''
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
