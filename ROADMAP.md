@@ -8,12 +8,12 @@ Rahmen funktionieren.
 
 ---
 
-## ✅ Bereits ausgeliefert (v1.0.0 – v1.0.8)
+## ✅ Bereits ausgeliefert (v1.0.0 – v1.2.2)
 
 - Rebrand ZenFlow → flowbend, lokal gevendortes Dexie, README/Doku
 - **PWA**: Manifest, Service Worker (offline), installierbar, eigenes App-Icon (Android/iOS)
 - **Auto-Update**: GitHub-Release-Pipeline + `update-check.php` (goneo-Webcron)
-- **Bilder**: 58 Posen als WebP (~2,9 MB), auto-Optimierung geänderter Bilder per Action
+- **Bilder**: Pose-Bilder als WebP, auto-Optimierung geänderter Bilder per Action
 - **Player**: Screen Wake Lock, zeitstempel-basierter Timer, „Bereit machen"-Phase,
   einseitige Posen automatisch beidseitig (rechts/links, gespiegelt), Übungszähler,
   Zurück/Weiter, Abschluss-Ansicht, Ton-/Vibrations-Schalter

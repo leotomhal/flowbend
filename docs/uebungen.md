@@ -1,7 +1,8 @@
 # flowbend — Übungsübersicht
 
-Alle 58 Posen mit deutscher Bezeichnung, Ausführung und dem zugehörigen Bild-Dateinamen.
-Referenz für Inhalte und Bild-Zuordnung (alle Bilder sind vorhanden).
+Die **58 Mobilitäts-Posen** mit deutscher Bezeichnung, Ausführung und Bild-Dateinamen
+(alle Bilder vorhanden). Die Kraft-Übungen stehen separat in
+[`kraftuebungen.md`](kraftuebungen.md).
 
 - Dateiname = Pose-`id`, Endung `.webp` — **case-sensitive** (`img/cobra.webp`, nicht `Cobra.webp`).
 - Fehlt ein Bild, zeigt flowbend automatisch das animierte Strichmännchen.

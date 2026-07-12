@@ -3,9 +3,9 @@
 **Geführte Dehn-, Mobilitäts- und Kraft-Routinen – komplett im Browser, offline-fähig, ohne Backend.**
 
 flowbend ist eine clientseitige Web-App (PWA). Ausgeliefert werden nur statische Dateien
-(HTML/JS/JSON + Bilder); die gesamte Logik läuft im Browser. Kuratierte Routinen und ein
-Bereichs-Generator (5/10/15 Min) führen dich mit Timer, Atem-Animation und optionalen
-Pose-Bildern durch die Übungen.
+(HTML/JS/JSON + Bilder); die gesamte Logik läuft im Browser. Zwei Modi: **Beweglichkeit**
+(kuratierte Flows + Bereichs-Generator) und **Kraft** (getimte Zirkel). Ein Timer mit
+Wake-Lock, Atem-Pacing, Ton/Vibration und Pose-Bildern führt durch die Übungen.
 
 <!-- Screenshots folgen -->
 <!--
@@ -15,12 +15,25 @@ Pose-Bildern durch die Übungen.
 
 ## Features
 
-- **15 kuratierte Routinen** mit ausformulierten deutschen Beschreibungen (Aufwachen, Schreibtisch-Reset, Schlaf, Kraft, Rücken, Balance …).
-- **Bereichs-Generator:** wähle Körperbereich + Dauer (5/10/15 Min) – flowbend baut on demand ein passendes Programm aus 58 Posen.
-- **Offline-fähig:** Service Worker cacht App und Daten; nach dem ersten Laden läuft alles ohne Netz.
-- **Pose-Bilder mit Fallback:** liegt kein Bild vor (oder lädt es nicht), wird automatisch ein animiertes SVG-Strichmännchen gezeigt.
-- **Streak:** zählt zusammenhängende Trainingstage (lokal im Browser, `localStorage`).
-- **Installierbar** als PWA (Manifest + Icon) auf Handy und Desktop.
+**Beweglichkeit**
+- **15 kuratierte Routinen** mit ausformulierten deutschen Texten (Aufwachen, Schreibtisch-Reset, Schlaf, Rücken, Balance …).
+- **Bereichs-Generator:** Körperbereich + Dauer (5/10/15 Min) → on demand ein Programm aus den Mobilitäts-Posen; einseitige Posen werden automatisch beidseitig gespielt (rechts/links).
+- **Atem-Pacing** (4 s ein / 6 s aus) während des Haltens.
+
+**Kraft**
+- **Umschalter Beweglichkeit ⇄ Kraft** auf dem Dashboard.
+- **Getimte Zirkel** (Arbeit/Pause/Runden), kuratiert und per **Generator** (Dauer + Intensität).
+- **Leise-Modus** („Nachbarn nicht ärgern") blendet laute/springende Übungen aus.
+
+**Player & Komfort**
+- Zeitstempel-Timer + **Screen Wake Lock** (Bildschirm bleibt an), „Bereit machen"-Countdown, Übungszähler, Zurück/Weiter, Ton/Vibration-Schalter.
+- **Verlauf/Statistik** (Heatmap, Streak, Rekord, Minuten) und adaptiver **„Was heute?"-Vorschlag** aus dem lokalen Verlauf.
+- **Dark Mode** (automatisch), **Streak**, medizinischer Hinweis.
+
+**Technik**
+- **Offline-fähig** (Service Worker), **installierbar** als PWA mit App-Icon.
+- **In-App-Update mit Nachfrage**: neue Version wird im Hintergrund geladen, ein Banner bietet „Aktualisieren".
+- **Pose-Bilder (WebP) mit Fallback:** fehlt/lädt ein Bild nicht, zeigt flowbend ein animiertes SVG-Strichmännchen.
 
 ## Lokal starten
 
@@ -33,49 +46,50 @@ python3 -m http.server 8000
 
 ## Deployment
 
-flowbend ist eine reine Statik-Seite – einfach den Repo-Inhalt in den Web-Root legen
-(z. B. GitHub Pages, goneo, Netlify). Wichtig:
-
-- Ordnerstruktur beibehalten (`data/`, `vendor/`, `img/` neben der `index.html`).
-- Pose-Bilder gehören nach `img/` und müssen **exakt** nach der Pose-`id` benannt sein
-  (`img/cobra.png` …), Dateinamen sind auf Linux-Hosts **case-sensitive**.
+flowbend ist eine reine Statik-Seite. Auslieferung läuft über **GitHub Releases + Auto-Updater**
+(siehe [`deploy/`](deploy/README.md)) – der Release-Workflow baut `flowbend.zip`, `update-check.php`
+(Webcron) spielt es in den Web-Root. Manuell: Repo-Inhalt in den Web-Root legen, Ordnerstruktur
+(`data/`, `vendor/`, `img/`) beibehalten. Pose-Bilder: `img/<id>.webp`, case-sensitive.
 
 ## Projektstruktur
 
 ```
-index.html          App-Struktur, Styling, SVG-Strichmännchen
-app.js              Laden/Caching, Dashboard, Generator, Player
-manifest.json       PWA-Manifest
-sw.js               Service Worker (Offline-Cache)
-data/poses.json     58 Posen (Stammdaten)
-data/routines.json  15 kuratierte Routinen
-vendor/dexie.min.js IndexedDB-Wrapper (lokal gevendored, kein CDN)
-img/                Pose-Bilder (img/<id>.png) + App-Icon
-ROADMAP.md          Geplante Features & Ideen
-docs/handover.md    Ausführliche Architektur- & Datendoku
-docs/uebungen.md    Alle 58 Übungen mit Beschreibung
-tools/check-poses.py     Abgleich: welche Pose-Bilder fehlen noch?
-tools/optimize-images.sh Bilder lokal verkleinern/komprimieren (en Block)
+index.html            App-Struktur, Styling, SVG-Strichmännchen, PWA-Meta
+app.js                Laden/Caching, Dashboard, Generator, Player, Zirkel, Statistik, Update
+manifest.json         PWA-Manifest
+sw.js                 Service Worker (Offline-Cache, Update-Signal)
+data/poses.json       64 Posen (58 Mobilität + 6 Kraft), inkl. nameDe/cue
+data/routines.json    15 kuratierte Flows
+data/workouts.json    Kraft-Zirkel (Arbeit/Pause/Runden)
+vendor/dexie.min.js   IndexedDB-Wrapper (lokal gevendored, kein CDN)
+img/                  Pose-Bilder (img/<id>.webp) + App-Icons
+ROADMAP.md            Geplante Features & Ideen
+docs/handover.md      Ausführliche Architektur- & Datendoku
+docs/uebungen.md      Die 58 Mobilitäts-Posen mit Beschreibung
+docs/kraftuebungen.md Kraft-Übungen (Bild-Briefing)
+deploy/               update-check.php (Auto-Updater) + Anleitung
+tools/check-data.py       CI-Invariantencheck (poseIds & Bilder)
+tools/check-poses.py      Abgleich: welche Pose-Bilder fehlen noch?
+tools/optimize-images.sh  Bilder lokal verkleinern/komprimieren (en Block)
 ```
 
 ## Bilder pflegen
 
-- **Fehlende Bilder finden:** `python3 tools/check-poses.py` listet alle Posen ohne Bild
-  (und Bilder mit falscher Dateiendung).
-- **Verkleinern:** Bilder einfach nach `img/` hochladen – die GitHub-Action
-  `optimize-images` verkleinert sie automatisch auf max. 800 px und committet sie
-  zurück. Am Rechner alternativ `bash tools/optimize-images.sh`.
+- **Fehlende finden:** `python3 tools/check-poses.py`.
+- **Format:** einfach PNG/JPG nach `img/` hochladen – die GitHub-Action `optimize-images`
+  verkleinert auf max. 800 px und wandelt in **WebP** um. Am Rechner: `bash tools/optimize-images.sh`.
 
 ## Datenmodell (Kurzform)
 
-**Pose** (`data/poses.json`): `id`, `name`, `focus[]` (steuert den Generator),
-`position` (standing|kneeling|seated|lying), optional `image`, plus SVG-Koordinaten
-für das Fallback-Strichmännchen.
+**Pose** (`data/poses.json`): `id`, `name`, `nameDe`, `focus[]` (steuert den Generator),
+`position`, optional `image` (WebP), `cue` (deutsche Ausführung), SVG-Koordinaten fürs
+Strichmännchen; optional `circuitOnly` (nur Kraft) und `loud` (im Leise-Modus ausgeblendet).
 
-**Routine** (`data/routines.json`): `id`, `meta` (Titel mit Emoji-Präfix),
-`exercises[]` mit `title`, `desc`, `duration` (Sek.) und `poseId`.
+**Flow** (`data/routines.json`): `id`, `meta`, `exercises[]` mit `title`, `desc`, `duration`, `poseId`.
 
-> **Invariante:** jede `poseId` in `routines.json` muss in `poses.json` existieren.
+**Zirkel** (`data/workouts.json`): `id`, `meta`, `rounds`, `work`, `rest`, `exercises[]` (`poseId`).
+
+> **Invariante:** jede `poseId` in Routinen/Zirkeln muss in `poses.json` existieren (Check: `tools/check-data.py`).
 
 Details, Stolperfallen und Ausbau-Ideen: siehe [`docs/handover.md`](docs/handover.md).
 
