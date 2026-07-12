@@ -75,6 +75,7 @@
     .btn-secondary { background: #f7f5f2; color: var(--text-main); }
     .app-footer { text-align: center; padding-top: 12px; }
     .app-footer a { font-size: 0.72rem; color: var(--text-sub); text-decoration: none; border-bottom: 1px solid #ece7e2; padding-bottom: 1px; }
+    .app-footer-meta { margin-top: 8px; font-size: 0.72rem; color: var(--text-sub); display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
     #disclaimer-view { display: none; }
     .disclaimer-text { font-size: 0.92rem; line-height: 1.6; color: var(--text-main); padding-right: 6px; }
     .disclaimer-text p { margin-bottom: 14px; }
@@ -189,7 +190,13 @@
         <div class="routine-list" id="workout-list"></div>
       </div>
     </div>
-    <div class="app-footer"><a href="#" onclick="showDisclaimer(); return false;">Hinweis · kein medizinischer Rat</a></div>
+    <div class="app-footer">
+      <a href="#" onclick="showDisclaimer(); return false;">Hinweis · kein medizinischer Rat</a>
+      <div class="app-footer-meta">
+        <a href="https://github.com/leotomhal/flowbend" target="_blank" rel="noopener">Quellcode auf GitHub</a>
+        <a href="mailto:tom@beyondthevault.de">Kontakt</a>
+      </div>
+    </div>
   </div>
   <div id="player-view" class="view">
     <div>
