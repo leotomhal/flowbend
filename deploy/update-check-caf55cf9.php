@@ -16,7 +16,7 @@
 // ------------------------- KONFIGURATION -------------------------
 $REPO       = 'leotomhal/flowbend';                 // GitHub owner/repo
 $ASSET_NAME = 'flowbend.zip';                        // Asset-Name aus dem Workflow
-$SECRET_KEY = 'fae6c9e121cfb3221f86b4a2e43bf0f5';    // Aufruf nur mit ?key=... erlaubt
+$SECRET_KEY = '25e4cb46d58e181c1e3f1ca9a6bee0c5';    // Aufruf nur mit ?key=... erlaubt
 $WEBROOT    = __DIR__;                               // Zielordner = Ordner dieser Datei
 
 // WICHTIG gegen das GitHub-API-Rate-Limit auf Shared-Hosting (gemeinsame IP!):
