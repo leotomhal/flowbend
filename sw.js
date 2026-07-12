@@ -4,7 +4,7 @@
 //    ersten Start ohne Netz aus dem Cache lädt (sobald einmal installiert).
 //  - Daten (data/*.json): network-first mit Cache-Fallback, damit Änderungen
 //    an poses/routines sofort greifen, aber offline die letzte Kopie bleibt.
-const CACHE = "flowbend-1.2.2"; // wird beim Release automatisch auf den Tag gesetzt
+const CACHE = "flowbend-1.3.0"; // wird beim Release automatisch auf den Tag gesetzt
 const SHELL = [
   ".",
   "index.html",

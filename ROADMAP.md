@@ -8,7 +8,7 @@ Rahmen funktionieren.
 
 ---
 
-## ✅ Bereits ausgeliefert (v1.0.0 – v1.2.2)
+## ✅ Bereits ausgeliefert (v1.0.0 – v1.3.0)
 
 - Rebrand ZenFlow → flowbend, lokal gevendortes Dexie, README/Doku
 - **PWA**: Manifest, Service Worker (offline), installierbar, eigenes App-Icon (Android/iOS)
@@ -25,7 +25,9 @@ Rahmen funktionieren.
   „Was heute?"-Vorschlag aus dem lokalen Verlauf (v1.1.0)
 - **Kraft-Modus**: Umschalter Beweglichkeit/Kraft, getimte Zirkel (Arbeit/Pause/Runden),
   Zirkel-Generator (Dauer/Intensität), 6 neue Kraft-Übungen (v1.2.0);
-  **Leise-Modus** („Nachbarn nicht ärgern") blendet laute Übungen aus (v1.2.1)
+  **Leise-Modus** („Nachbarn nicht ärgern") blendet laute Übungen aus (v1.2.1);
+  **10 weitere Kraft-Übungen** (jetzt 16) + 4 neue Zirkel – HIIT, Core (leise),
+  Bein- und Oberkörper-Zirkel (v1.3.0)
 
 ---
 

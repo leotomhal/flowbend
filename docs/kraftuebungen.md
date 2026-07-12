@@ -7,8 +7,17 @@ Dateiname = `id` + `.webp` (case-sensitive). PNG/JPG-Upload genügt – die
 
 ## ✅ Bereits vorhanden (mit Fotos)
 `pushup` · `situp` · `squat` · `lunge` · `jumpingJack` (laut) · `mountainClimber`
+· `wallSit` · `tricepDip` · `superman` · `deadBug` · `bicycleCrunch`
+· `reverseCrunch` · `inchworm` · `squatJump` (laut) · `burpee` (laut) · `highKnees` (laut)
 
-## 🎯 10 weitere Übungen
+**Stand:** alle 16 Kraft-Übungen sind mit Foto in `data/poses.json` eingetragen (`circuitOnly`),
+die lauten mit `loud`-Flag (Leise-Modus). Neue Zirkel dazu: `hiit`, `corequiet`, `legcircuit`,
+`uppercircuit` (siehe `data/workouts.json`).
+
+## ✅ Umgesetzt: 10 Übungen (v1.3.0)
+
+Die folgenden 10 Übungen wurden mit den gelieferten Fotos eingetragen — das Briefing bleibt
+als Referenz erhalten.
 
 | Datei | Name (DE) | Fokus | Laut? | Bildbeschreibung (prompt-tauglich) |
 |---|---|---|---|---|

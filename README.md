@@ -22,7 +22,7 @@ Wake-Lock, Atem-Pacing, Ton/Vibration und Pose-Bildern führt durch die Übungen
 
 **Kraft**
 - **Umschalter Beweglichkeit ⇄ Kraft** auf dem Dashboard.
-- **Getimte Zirkel** (Arbeit/Pause/Runden), kuratiert und per **Generator** (Dauer + Intensität).
+- **16 Kraft-Übungen** und **7 getimte Zirkel** (Arbeit/Pause/Runden), kuratiert und per **Generator** (Dauer + Intensität) – u. a. HIIT, Core (leise), Bein- und Oberkörper-Zirkel.
 - **Leise-Modus** („Nachbarn nicht ärgern") blendet laute/springende Übungen aus.
 
 **Player & Komfort**
@@ -58,9 +58,9 @@ index.html            App-Struktur, Styling, SVG-Strichmännchen, PWA-Meta
 app.js                Laden/Caching, Dashboard, Generator, Player, Zirkel, Statistik, Update
 manifest.json         PWA-Manifest
 sw.js                 Service Worker (Offline-Cache, Update-Signal)
-data/poses.json       64 Posen (58 Mobilität + 6 Kraft), inkl. nameDe/cue
+data/poses.json       74 Posen (58 Mobilität + 16 Kraft), inkl. nameDe/cue
 data/routines.json    15 kuratierte Flows
-data/workouts.json    Kraft-Zirkel (Arbeit/Pause/Runden)
+data/workouts.json    7 Kraft-Zirkel (Arbeit/Pause/Runden)
 vendor/dexie.min.js   IndexedDB-Wrapper (lokal gevendored, kein CDN)
 img/                  Pose-Bilder (img/<id>.webp) + App-Icons
 ROADMAP.md            Geplante Features & Ideen

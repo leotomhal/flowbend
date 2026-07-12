@@ -7,5 +7,17 @@
  ]},
  {"id": "quick", "meta": "⚡ SCHNELL-ZIRKEL", "rounds": 1, "work": 30, "rest": 10, "exercises": [
    {"poseId": "jumpingJack"}, {"poseId": "squat"}, {"poseId": "pushup"}, {"poseId": "mountainClimber"}, {"poseId": "situp"}
+ ]},
+ {"id": "hiit", "meta": "🚀 HIIT-INFERNO", "rounds": 3, "work": 30, "rest": 15, "exercises": [
+   {"poseId": "squatJump"}, {"poseId": "burpee"}, {"poseId": "highKnees"}, {"poseId": "jumpingJack"}, {"poseId": "mountainClimber"}
+ ]},
+ {"id": "corequiet", "meta": "🤫 CORE LEISE", "rounds": 2, "work": 35, "rest": 12, "exercises": [
+   {"poseId": "deadBug"}, {"poseId": "bicycleCrunch"}, {"poseId": "reverseCrunch"}, {"poseId": "plank"}, {"poseId": "hollowHold"}
+ ]},
+ {"id": "legcircuit", "meta": "🦵 BEIN-ZIRKEL", "rounds": 3, "work": 35, "rest": 15, "exercises": [
+   {"poseId": "wallSit"}, {"poseId": "squat"}, {"poseId": "lunge"}, {"poseId": "superman"}
+ ]},
+ {"id": "uppercircuit", "meta": "🫱 OBERKÖRPER-ZIRKEL", "rounds": 3, "work": 30, "rest": 15, "exercises": [
+   {"poseId": "pushup"}, {"poseId": "tricepDip"}, {"poseId": "inchworm"}, {"poseId": "plank"}
  ]}
 ]
