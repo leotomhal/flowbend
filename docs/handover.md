@@ -34,8 +34,9 @@ data/routines.json┴─►  fetch (beim Start)  ─►  IndexedDB (Dexie)  ─�
 | `data/poses.json` | 58 Posen (Stammdaten) |
 | `data/routines.json` | 15 kuratierte Routinen |
 | `vendor/dexie.min.js` | IndexedDB-Wrapper, lokal gevendored (kein CDN) |
-| `img/<id>.png` | (Vom Nutzer beizusteuernde) Bilddateien |
-| `img/icon.svg` | App-/Browser-Icon |
+| `img/<id>.webp` | Pose-Bilder (WebP, aus PNG konvertiert) |
+| `img/icon-192.png`, `img/icon-512.png`, `img/icon.svg` | App-/Browser-Icons |
+| `tools/check-data.py` | Invariantencheck (CI: poseIds & Bilder vorhanden) |
 
 ## 3. Datenmodell
 
@@ -43,10 +44,12 @@ data/routines.json┴─►  fetch (beim Start)  ─►  IndexedDB (Dexie)  ─�
 ```json
 {
   "id": "cobra",                 // eindeutig, von routines/Generator referenziert
-  "name": "Cobra Pose",          // gängiger englischer Name (Anzeige im Player)
+  "name": "Cobra Pose",          // gängiger englischer Name
+  "nameDe": "Kobra",             // deutscher Name (Titel im Bereichs-Generator)
   "focus": ["back","spine","chest"], // Bereiche; steuert Bereichs-Generator
   "position": "lying",           // standing|kneeling|seated|lying (Reihenfolge im Generator)
-  "image": "img/cobra.png",      // optional; vorhanden ⇒ Bild, sonst Strichmännchen
+  "image": "img/cobra.webp",     // optional; vorhanden ⇒ Bild, sonst Strichmännchen
+  "cue": "In Bauchlage ...",     // deutsche Ausführung (Beschreibung im Generator)
   "spine": [60,165,105,135],     // SVG-Linie x1,y1,x2,y2 (Fallback-Strichmännchen)
   "lLeg": [...], "rLeg": [...], "lArm": [...], "rArm": [...],
   "head": [115,126]              // Kreis cx,cy
@@ -92,8 +95,8 @@ Zähler beim nächsten Training wieder bei 1.
 
 - **`file://` blockt `fetch`.** Per Doppelklick geöffnet bleibt das Dashboard leer
   (CORS für lokale Dateien). Lokal testen mit `python3 -m http.server`.
-- **Bilddateinamen case-sensitive.** Auf Linux-Hosts muss `img/cobra.png` exakt passen –
-  `Cobra.png` lädt nicht und fällt aufs Strichmännchen zurück.
+- **Bilddateinamen case-sensitive.** Auf Linux-Hosts muss `img/cobra.webp` exakt passen –
+  `Cobra.webp` lädt nicht und fällt aufs Strichmännchen zurück.
 - **`position` ist nicht durchgängig anatomisch.** `downwardDog`/`dolphinPose` stehen auf
   `kneeling`, die Planks und `cobra`/`upwardDog` auf `lying`. Das Feld steuert nur die
   Generator-Reihenfolge, nicht die echte Körperhaltung – beim Foto-Briefing nicht stolpern.
@@ -107,8 +110,8 @@ Zähler beim nächsten Training wieder bei 1.
 - **Player-Timer ist zeitstempel-basiert** (`phaseEndsAt`), damit er nach Bildschirm-Sleep/
   Tab-Wechsel stimmt; zusätzlich hält ein **Screen Wake Lock** den Bildschirm während der
   Routine an (Fallback: läuft ohne Wake Lock normal weiter).
-- **Generierte Übungstexte sind generisch** („Ruhig halten und tief atmen.") + englischer
-  Posenname; nur kuratierte Routinen haben individuelle deutsche Beschreibungen.
+- **Generierte Programme nutzen deutsche Namen + Ausführungen** aus den Pose-Feldern
+  `nameDe`/`cue`. Fehlen sie, greift ein Fallback (englischer Name + „Ruhig halten …").
 - **Generierte Programme sind deterministisch** (kein Zufall) – gleiches Programm bei jedem Start.
 - **SVG-Koordinaten sind nicht visuell getestet.** Besonders Planks/Side Plank ggf. nachjustieren.
 - **Emoji-Präfix der Routinen-Titel** wird per `replace(/^\s*\S+\s+/, "")` entfernt.
@@ -118,8 +121,8 @@ Zähler beim nächsten Training wieder bei 1.
 ## 6. Deployment
 
 1. Repo-Inhalt in den Web-Root legen; Ordnerstruktur (`data/`, `vendor/`, `img/`) beibehalten.
-2. Pose-PNGs nach `img/` legen, exakt nach `id` benannt (`img/cobra.png` …). Optional –
-   fehlende Bilder ⇒ Strichmännchen.
+2. Pose-Bilder nach `img/` legen, exakt nach `id` benannt (`img/cobra.webp` …). PNG/JPG-Uploads
+   wandelt die `optimize-images`-Action automatisch in WebP um. Optional – fehlende Bilder ⇒ Strichmännchen.
 3. Lokal testen: `python3 -m http.server` im Projektordner, dann `http://localhost:8000`.
 
 ## 7. Offene Ausbaustufen (Ideen)

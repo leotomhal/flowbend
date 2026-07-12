@@ -136,7 +136,7 @@ async function startArea(tag, label, minutes) {
   const exercises = [];
   for (let i = 0; i < slots; i++) {
     const p = pool[i % pool.length]; // bei kleinem Pool zyklisch wiederholen
-    exercises.push({ title: p.name || p.id, desc: "Ruhig halten und tief atmen.", duration: durations[i], poseId: p.id });
+    exercises.push({ title: p.nameDe || p.name || p.id, desc: p.cue || "Ruhig halten und tief atmen.", duration: durations[i], poseId: p.id });
   }
   playRoutine({ id: `gen-${tag}-${minutes}`, meta: `🎯 ${label} · ${minutes} Min`, exercises });
 }

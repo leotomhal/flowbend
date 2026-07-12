@@ -1,14 +1,15 @@
 name: Optimize Images
 
-# Läuft, wenn Bilder nach img/ gepusht werden. Verkleinert NUR die im Push
-# geänderten Bilder (max. 800 px, Metadaten strippen, PNGs komprimieren) und
-# committet sie zurück – so wird nicht bei jedem Push der ganze Ordner neu kodiert.
+# Läuft, wenn Bilder nach img/ gepusht werden. Verarbeitet NUR die im Push
+# geänderten Bilder: PNG/JPG werden in optimiertes WebP (max. 800 px) umgewandelt
+# und das Original entfernt; vorhandene WebP werden in place optimiert.
 on:
   push:
     paths:
       - 'img/**.png'
       - 'img/**.jpg'
       - 'img/**.jpeg'
+      - 'img/**.webp'
 
 permissions:
   contents: write
@@ -21,33 +22,39 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # volle Historie, damit der Diff gegen den Vorzustand geht
+          fetch-depth: 0   # volle Historie für den Diff gegen den Vorzustand
 
       - name: Geänderte Bilder ermitteln
         id: changed
         run: |
           BEFORE="${{ github.event.before }}"
           if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
-            FILES=$(ls img/*.png img/*.jpg img/*.jpeg 2>/dev/null || true)   # neuer Branch -> alle
+            FILES=$(ls img/*.png img/*.jpg img/*.jpeg img/*.webp 2>/dev/null || true)
           else
-            FILES=$(git diff --name-only "$BEFORE" "${{ github.sha }}" -- 'img/*.png' 'img/*.jpg' 'img/*.jpeg' || true)
+            FILES=$(git diff --name-only "$BEFORE" "${{ github.sha }}" -- 'img/*.png' 'img/*.jpg' 'img/*.jpeg' 'img/*.webp' || true)
           fi
           OUT=""
-          for f in $FILES; do [ -f "$f" ] && OUT="$OUT $f"; done   # gelöschte auslassen
+          for f in $FILES; do
+            case "$f" in img/icon-*) continue ;; esac   # App-Icons (PNG) nicht anfassen
+            [ -f "$f" ] && OUT="$OUT $f"
+          done
           echo "files=$OUT" >> "$GITHUB_OUTPUT"
-          echo "Zu optimieren:$OUT"
+          echo "Zu verarbeiten:$OUT"
 
       - name: Tools installieren
         if: steps.changed.outputs.files != ''
-        run: sudo apt-get -qq update && sudo apt-get -qq install -y imagemagick pngquant
+        run: sudo apt-get -qq update && sudo apt-get -qq install -y imagemagick webp
 
-      - name: Verkleinern & komprimieren
+      - name: Nach WebP konvertieren / optimieren
         if: steps.changed.outputs.files != ''
         run: |
           for f in ${{ steps.changed.outputs.files }}; do
-            convert "$f" -resize '800x800>' -strip -quality 82 "$f"
             case "$f" in
-              *.png) pngquant --force --skip-if-larger --quality=65-90 --output "$f" "$f" || true ;;
+              *.webp)
+                convert "$f" -resize '800x800>' -strip -quality 82 "$f" ;;
+              *)
+                convert "$f" -resize '800x800>' -strip -quality 82 "${f%.*}.webp"
+                rm -f "$f" ;;   # Original-Raster entfernen, App nutzt WebP
             esac
           done
 
@@ -56,10 +63,10 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if ! git diff --quiet -- img; then
-            git add img
-            git commit -m "Optimize images (resize <=800px, compress)"
+          git add -A img
+          if ! git diff --cached --quiet; then
+            git commit -m "Optimize images (to WebP, <=800px)"
             git push
           else
-            echo "Keine Änderungen – Bilder bereits optimiert."
+            echo "Keine Änderungen."
           fi

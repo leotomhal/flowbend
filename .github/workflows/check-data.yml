@@ -1,0 +1,23 @@
+name: Check Data
+
+# Sicherheitsnetz: stellt sicher, dass poses.json/routines.json konsistent sind
+# (alle poseIds existieren, alle Bilder vorhanden, Pflichtfelder gesetzt).
+on:
+  push:
+    paths:
+      - 'data/**'
+      - 'img/**'
+      - 'tools/check-data.py'
+      - '.github/workflows/check-data.yml'
+  pull_request:
+    paths:
+      - 'data/**'
+      - 'img/**'
+      - 'tools/check-data.py'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/check-data.py
