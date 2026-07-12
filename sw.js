@@ -4,7 +4,7 @@
 //    ersten Start ohne Netz aus dem Cache lädt (sobald einmal installiert).
 //  - Daten (data/*.json): network-first mit Cache-Fallback, damit Änderungen
 //    an poses/routines sofort greifen, aber offline die letzte Kopie bleibt.
-const CACHE = "flowbend-v3";
+const CACHE = "flowbend-v4";
 const SHELL = [
   ".",
   "index.html",
@@ -12,6 +12,8 @@ const SHELL = [
   "manifest.json",
   "vendor/dexie.min.js",
   "img/icon.svg",
+  "img/icon-192.png",
+  "img/icon-512.png",
   "data/poses.json",
   "data/routines.json"
 ];

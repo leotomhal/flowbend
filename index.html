@@ -10,6 +10,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="flowbend">
   <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="img/icon-192.png">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23fdf6f0'/%3E%3Cpath d='M20 62 C 40 30, 60 30, 80 62' fill='none' stroke='%23d97736' stroke-width='9' stroke-linecap='round'/%3E%3C/svg%3E">
   <style>
     :root {
@@ -76,6 +77,17 @@
     .disclaimer-text strong { color: var(--accent-warm); }
     #prep-banner { display: none; background: var(--accent-light); color: var(--accent-warm); font-size: 0.88rem; font-weight: 600; text-align: center; padding: 9px 12px; border-radius: 14px; margin: 6px 0 -2px; }
     .stage-area.mirror .pose-image, .stage-area.mirror .stretching-svg { transform: scaleX(-1); }
+    .player-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    #cue-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; padding: 2px 4px; line-height: 1; }
+    #ex-counter { font-size: 0.72rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-sub); margin-bottom: 6px; }
+    .btn-icon { flex: 0 0 auto; padding-left: 18px; padding-right: 18px; font-size: 1.05rem; }
+    #done-view { display: none; text-align: center; }
+    .done-emoji { font-size: 3rem; margin-bottom: 8px; }
+    .done-title { font-size: 1.7rem; font-weight: 300; margin-bottom: 22px; }
+    .done-stats { display: flex; gap: 12px; }
+    .done-stat { background: var(--accent-light); border-radius: 18px; padding: 16px 8px; flex: 1; }
+    .done-stat b { display: block; font-size: 1.7rem; font-weight: 500; color: var(--accent-warm); }
+    .done-stat span { font-size: 0.7rem; color: var(--text-sub); text-transform: uppercase; letter-spacing: 1px; }
   </style>
   <script src="vendor/dexie.min.js"></script>
 </head>
@@ -104,7 +116,10 @@
   <div id="player-view" class="view">
     <div>
       <div class="progress-bar-container"><div class="progress-bar" id="progress"></div></div>
-      <div id="routine-meta-title" style="font-size: 0.8rem; color: var(--text-sub); letter-spacing: 1px;"></div>
+      <div class="player-top">
+        <div id="routine-meta-title" style="font-size: 0.8rem; color: var(--text-sub); letter-spacing: 1px;"></div>
+        <button id="cue-btn" onclick="toggleCues()" title="Ton &amp; Vibration an/aus">🔔</button>
+      </div>
     </div>
     <div id="prep-banner"></div>
     <div class="stage-area" id="stage">
@@ -123,14 +138,30 @@
       </svg>
     </div>
     <div>
+      <div id="ex-counter"></div>
       <div class="exercise-title" id="ex-title">Übung</div>
       <div class="exercise-desc" id="ex-desc">Beschreibung...</div>
     </div>
     <div class="time-display" id="time-display">00:00</div>
     <div class="controls">
       <button class="btn btn-secondary" onclick="quitRoutine()">Abbrechen</button>
-      <button class="btn btn-secondary" id="skip-btn" onclick="skipExercise()">➔ Weiter</button>
+      <button class="btn btn-secondary btn-icon" onclick="prevExercise()" title="Vorherige Übung">◄</button>
+      <button class="btn btn-secondary btn-icon" id="skip-btn" onclick="skipExercise()" title="Nächste Übung">►</button>
       <button class="btn" id="pause-btn" onclick="togglePause()">Pause</button>
+    </div>
+  </div>
+  <div id="done-view" class="view">
+    <div style="margin: auto 0;">
+      <div class="done-emoji">✨</div>
+      <div class="done-title">Geschafft!</div>
+      <div class="done-stats">
+        <div class="done-stat"><b id="done-ex">0</b><span>Übungen</span></div>
+        <div class="done-stat"><b id="done-min">0</b><span>Minuten</span></div>
+        <div class="done-stat"><b id="done-streak">0</b><span>Tage 🔥</span></div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn" onclick="quitRoutine()">Fertig</button>
     </div>
   </div>
   <div id="disclaimer-view" class="view">

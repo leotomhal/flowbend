@@ -9,10 +9,12 @@ const ROUTINES_URL = "data/routines.json";
 const HISTORY_KEY = "fb_history";
 
 let currentRoutine = null, currentExIndex = 0, timeLeft = 0, timerId = null, isPaused = false;
-let selectedMinutes = 10;
+let selectedMinutes = Number(localStorage.getItem("fb_minutes")) || 10;
+let cuesOn = localStorage.getItem("fb_cues") !== "0"; // Ton + Vibration (Standard: an)
 
 // Player-Zustand (zeitstempel-basiert, damit der Timer auch nach Bildschirm-Sleep stimmt).
-const PREP_SECONDS = 5;   // "Bereit machen" vor jeder Übung
+const PREP_SECONDS = 5;    // "Bereit machen" vor jeder Übung
+const SWITCH_SECONDS = 2;  // kürzere Vorbereitung beim Seitenwechsel (rechts -> links)
 let phase = "hold";       // "prep" | "hold"
 let phaseEndsAt = 0;      // Ziel-Endzeitpunkt der aktuellen Phase (ms)
 let pausedRemaining = 0;  // Restzeit beim Pausieren (ms)
@@ -67,19 +69,18 @@ async function initApp() {
       ? "Offline-Modus (lokaler Cache)"
       : "Keine Daten verfuegbar – bitte einmal online laden";
   }
-  renderDashboardFromDB(); buildAreaUI(); updateStreak();
+  renderDashboardFromDB(); buildAreaUI(); updateStreak(); updateCueButton();
+}
+
+// Genau eine Vollbild-Ansicht sichtbar schalten.
+const VIEWS = ["dashboard-view", "player-view", "disclaimer-view", "done-view"];
+function showView(id) {
+  VIEWS.forEach(v => { document.getElementById(v).style.display = (v === id) ? "flex" : "none"; });
 }
 
 // Medizinischer Hinweis / Disclaimer – nur über den Footer-Link erreichbar, kein Zwangshinweis.
-function showDisclaimer() {
-  document.getElementById("dashboard-view").style.display = "none";
-  document.getElementById("player-view").style.display = "none";
-  document.getElementById("disclaimer-view").style.display = "flex";
-}
-function hideDisclaimer() {
-  document.getElementById("disclaimer-view").style.display = "none";
-  document.getElementById("dashboard-view").style.display = "flex";
-}
+function showDisclaimer() { showView("disclaimer-view"); }
+function hideDisclaimer() { showView("dashboard-view"); }
 
 async function renderDashboardFromDB() {
   const container = document.querySelector(".routine-list"); container.innerHTML = "";
@@ -106,8 +107,10 @@ async function buildAreaUI() {
     grid.appendChild(b);
   });
   document.querySelectorAll("#duration-toggle button").forEach(btn => {
+    btn.classList.toggle("active", Number(btn.dataset.min) === selectedMinutes); // gespeicherte Dauer markieren
     btn.onclick = () => {
       selectedMinutes = Number(btn.dataset.min);
+      localStorage.setItem("fb_minutes", selectedMinutes);
       document.querySelectorAll("#duration-toggle button").forEach(x => x.classList.toggle("active", x === btn));
     };
   });
@@ -123,9 +126,11 @@ async function startArea(tag, label, minutes) {
 
   const target = minutes * 60;
   const slots = Math.max(3, Math.round(target / BASE_HOLD));
-  const per = Math.floor(target / slots);
+  // Prep-Zeit aus dem Ziel herausrechnen, damit Halten + Vorbereitung ~ Zielzeit ergibt.
+  const holdBudget = Math.max(slots * 10, target - slots * PREP_SECONDS);
+  const per = Math.floor(holdBudget / slots);
   const durations = Array(slots).fill(per);
-  for (let i = 0; i < target - per * slots; i++) durations[i] += 1; // Rest exakt verteilen -> Summe = Ziel
+  for (let i = 0; i < holdBudget - per * slots; i++) durations[i] += 1; // Rest exakt verteilen
 
   const exercises = [];
   for (let i = 0; i < slots; i++) {
@@ -140,8 +145,7 @@ function playRoutine(routine) {
   if (!routine) { alert("Routine nicht gefunden."); return; }
   currentRoutine = { ...routine, exercises: expandBilateral(routine.exercises) };
   currentExIndex = 0; isPaused = false;
-  document.getElementById("dashboard-view").style.display = "none";
-  document.getElementById("player-view").style.display = "flex";
+  showView("player-view");
   document.getElementById("routine-meta-title").innerText = currentRoutine.meta;
   requestWakeLock();
   loadExercise();
@@ -158,6 +162,7 @@ async function loadExercise() {
   document.getElementById("ex-desc").innerText = ex.desc;
   const pose = await db.poses.get(ex.poseId); showPose(pose);
   document.getElementById("stage").classList.toggle("mirror", ex.side === "left"); // linke Seite gespiegelt
+  document.getElementById("ex-counter").innerText = `Übung ${currentExIndex + 1} / ${currentRoutine.exercises.length}`;
   document.getElementById("progress").style.width = (currentExIndex / currentRoutine.exercises.length) * 100 + "%";
   document.getElementById("stage").classList.remove("paused-state");
   document.getElementById("pause-btn").innerText = "Pause";
@@ -169,14 +174,17 @@ function startPhase(newPhase) {
   phase = newPhase;
   const banner = document.getElementById("prep-banner");
   if (phase === "prep") {
-    banner.innerText = "Bereit machen · als Nächstes: " + currentEx.title;
+    const secs = currentEx.prepSecs ?? PREP_SECONDS;
+    banner.innerText = currentEx.side === "left"
+      ? "Seite wechseln · " + currentEx.title
+      : "Bereit machen · als Nächstes: " + currentEx.title;
     banner.style.display = "block";
-    phaseEndsAt = Date.now() + PREP_SECONDS * 1000;
-    tone(300, 0.08);
+    phaseEndsAt = Date.now() + secs * 1000;
+    tone(300, 0.08); vibrate(30);
   } else {
     banner.style.display = "none";
     phaseEndsAt = Date.now() + currentEx.duration * 1000;
-    tone(440, 0.1);
+    tone(440, 0.1); vibrate(80);
   }
   updateTimeFromClock();
   clearInterval(timerId); timerId = setInterval(tick, 250);
@@ -197,14 +205,29 @@ function updateTimeFromClock() {
 }
 
 function skipExercise() { nextExercise(); }
+function prevExercise() {
+  clearInterval(timerId);
+  if (currentExIndex > 0) currentExIndex--; // sonst aktuelle Übung neu starten
+  loadExercise();
+}
 function nextExercise() {
   clearInterval(timerId); currentExIndex++;
   if (currentExIndex < currentRoutine.exercises.length) loadExercise();
-  else {
-    const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
-    history.push(new Date().setHours(0,0,0,0)); localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-    updateStreak(); alert("Grossartig! Routine erfolgreich beendet. ✨"); quitRoutine();
-  }
+  else finishRoutine();
+}
+
+function finishRoutine() {
+  clearInterval(timerId); releaseWakeLock();
+  const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+  history.push(new Date().setHours(0, 0, 0, 0)); localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  updateStreak();
+  document.getElementById("done-ex").innerText = currentRoutine.exercises.length;
+  document.getElementById("done-min").innerText =
+    Math.round(currentRoutine.exercises.reduce((s, e) => s + e.duration, 0) / 60);
+  document.getElementById("done-streak").innerText = document.getElementById("streak-count").innerText;
+  document.getElementById("stage").classList.remove("mirror");
+  tone(660, 0.15); vibrate([60, 40, 120]);
+  showView("done-view");
 }
 
 function showPose(pose) {
@@ -251,8 +274,7 @@ function quitRoutine() {
   clearInterval(timerId);
   releaseWakeLock();
   document.getElementById("stage").classList.remove("mirror");
-  document.getElementById("player-view").style.display = "none";
-  document.getElementById("dashboard-view").style.display = "flex";
+  showView("dashboard-view");
 }
 
 // Einseitige Übungen in zwei Seiten aufteilen (rechts + links), Haltezeit hälftig.
@@ -263,7 +285,7 @@ function expandBilateral(exercises) {
       const right = Math.max(8, Math.round(ex.duration / 2));
       const left = Math.max(8, ex.duration - right);
       out.push({ ...ex, duration: right, title: ex.title + " (rechts)", side: "right" });
-      out.push({ ...ex, duration: left, title: ex.title + " (links)", side: "left" });
+      out.push({ ...ex, duration: left, title: ex.title + " (links)", side: "left", prepSecs: SWITCH_SECONDS });
     } else {
       out.push({ ...ex, side: null });
     }
@@ -299,6 +321,7 @@ document.addEventListener("visibilitychange", () => {
 // an das Browser-Limit (~6 Contexts) und der Ton bricht ab.
 let audioCtx = null;
 function tone(f, d) {
+  if (!cuesOn) return;
   try {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === "suspended") audioCtx.resume();
@@ -310,6 +333,21 @@ function tone(f, d) {
     o.start();
     o.stop(audioCtx.currentTime + d);
   } catch (e) { /* Audio nicht verfügbar – Übung läuft trotzdem weiter. */ }
+}
+
+function vibrate(pattern) {
+  if (cuesOn && navigator.vibrate) { try { navigator.vibrate(pattern); } catch (e) {} }
+}
+
+// Ton + Vibration gemeinsam an/aus (im Player, oben rechts).
+function toggleCues() {
+  cuesOn = !cuesOn;
+  localStorage.setItem("fb_cues", cuesOn ? "1" : "0");
+  updateCueButton();
+}
+function updateCueButton() {
+  const b = document.getElementById("cue-btn");
+  if (b) b.innerText = cuesOn ? "🔔" : "🔕";
 }
 
 // Echte Streak: zusammenhängende Trainingstage bis heute (oder gestern).
