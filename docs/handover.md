@@ -115,8 +115,10 @@ Zähler beim nächsten Training wieder bei 1.
 - **Generierte Programme sind deterministisch** (kein Zufall) – gleiches Programm bei jedem Start.
 - **SVG-Koordinaten sind nicht visuell getestet.** Besonders Planks/Side Plank ggf. nachjustieren.
 - **Emoji-Präfix der Routinen-Titel** wird per `replace(/^\s*\S+\s+/, "")` entfernt.
-- **Service Worker cacht die App-Shell.** Nach Änderungen an `index.html`/`app.js` die
-  Cache-Version in `sw.js` (`const CACHE = "flowbend-v1"`) hochzählen, damit Clients neu laden.
+- **Service Worker cacht die App-Shell.** `APP_VERSION` (app.js) und `CACHE` (sw.js) werden
+  beim Release **automatisch** auf den Tag gestempelt (`.github/workflows/release.yml`) – kein
+  manuelles Hochzählen nötig. Jeder neue Tag ⇒ neuer SW ⇒ die App zeigt auf dem Dashboard ein
+  „Neue Version verfügbar"-Banner (Nachfrage), das per Klick aktiviert + neu lädt.
 
 ## 6. Deployment
 

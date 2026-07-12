@@ -71,12 +71,14 @@ async function initApp() {
       : "Keine Daten verfuegbar – bitte einmal online laden";
   }
   renderDashboardFromDB(); buildAreaUI(); updateStreak(); updateCueButton();
+  document.getElementById("app-version").innerText = "v" + APP_VERSION;
 }
 
 // Genau eine Vollbild-Ansicht sichtbar schalten.
 const VIEWS = ["dashboard-view", "player-view", "disclaimer-view", "done-view"];
 function showView(id) {
   VIEWS.forEach(v => { document.getElementById(v).style.display = (v === id) ? "flex" : "none"; });
+  updateBannerVisibility(); // Update-Hinweis nur auf dem Dashboard zeigen
 }
 
 // Medizinischer Hinweis / Disclaimer – nur über den Footer-Link erreichbar, kein Zwangshinweis.
@@ -390,10 +392,44 @@ function updateStreak() {
   document.getElementById("streak-count").innerText = streak;
 }
 
-// Service Worker registrieren (echte Offline-Fähigkeit inkl. App-Runtime).
+// --- App-Version + Update-Fluss (PWA, mit Nachfrage) ---
+const APP_VERSION = "1.0.9"; // wird beim Release automatisch auf den Tag gesetzt
+let pendingReg = null, updateInitiated = false;
+
+function showUpdateBanner(reg) { pendingReg = reg; updateBannerVisibility(); }
+function updateBannerVisibility() {
+  const el = document.getElementById("update-banner");
+  if (!el) return;
+  const onDash = document.getElementById("dashboard-view").style.display !== "none";
+  el.style.display = (pendingReg && onDash) ? "flex" : "none";
+}
+function applyUpdate() {
+  if (pendingReg && pendingReg.waiting) { updateInitiated = true; pendingReg.waiting.postMessage("SKIP_WAITING"); }
+}
+
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js").catch(() => { /* Offline-Cache optional. */ });
+  window.addEventListener("load", async () => {
+    try {
+      const reg = await navigator.serviceWorker.register("sw.js");
+      // Schon ein wartender Worker (Update bereit)?
+      if (reg.waiting && navigator.serviceWorker.controller) showUpdateBanner(reg);
+      reg.addEventListener("updatefound", () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener("statechange", () => {
+          if (nw.state === "installed" && navigator.serviceWorker.controller) showUpdateBanner(reg);
+        });
+      });
+      // Proaktiv auf Updates prüfen: beim Start und bei Rückkehr in den Vordergrund.
+      const check = () => reg.update().catch(() => {});
+      check();
+      document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") check(); });
+    } catch (e) { /* Offline-Cache optional. */ }
+  });
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!updateInitiated) return; // kein Reload bei Erstinstallation
+    updateInitiated = false;
+    location.reload();
   });
 }
 

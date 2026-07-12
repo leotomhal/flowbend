@@ -4,7 +4,7 @@
 //    ersten Start ohne Netz aus dem Cache lädt (sobald einmal installiert).
 //  - Daten (data/*.json): network-first mit Cache-Fallback, damit Änderungen
 //    an poses/routines sofort greifen, aber offline die letzte Kopie bleibt.
-const CACHE = "flowbend-v8";
+const CACHE = "flowbend-1.0.9"; // wird beim Release automatisch auf den Tag gesetzt
 const SHELL = [
   ".",
   "index.html",
@@ -18,7 +18,13 @@ const SHELL = [
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // Kein sofortiges skipWaiting: der neue Worker wartet, bis die App das Update freigibt.
+  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)));
+});
+
+// Die App gibt den wartenden Worker per Button frei ("Aktualisieren").
+self.addEventListener("message", (event) => {
+  if (event.data === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {

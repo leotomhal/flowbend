@@ -24,8 +24,14 @@ jobs:
           # Nur die lauffähigen Dateien ins ZIP – keine Doku, kein .github,
           # kein Deploy-Script, keine Lizenz. So bleibt das Update schlank
           # und update-check.php überschreibt sich beim Deploy nicht selbst.
+          VER="${{ github.event.inputs.version || github.ref_name }}"
+          VER="${VER#v}"   # führendes v entfernen
           mkdir -p dist
           cp -r index.html app.js manifest.json sw.js data vendor img dist/
+          # App-Version + SW-Cache auf den Release-Tag stempeln (neuer SW pro Release
+          # -> Update-Hinweis greift; angezeigte Version stimmt immer).
+          sed -i "s/const APP_VERSION = \"[^\"]*\"/const APP_VERSION = \"$VER\"/" dist/app.js
+          sed -i "s/const CACHE = \"[^\"]*\"/const CACHE = \"flowbend-$VER\"/" dist/sw.js
           cd dist && zip -r ../flowbend.zip .
 
       - uses: softprops/action-gh-release@v2
