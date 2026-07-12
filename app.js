@@ -72,10 +72,11 @@ async function initApp() {
   }
   renderDashboardFromDB(); buildAreaUI(); updateStreak(); updateCueButton();
   document.getElementById("app-version").innerText = "v" + APP_VERSION;
+  renderSuggestion();
 }
 
 // Genau eine Vollbild-Ansicht sichtbar schalten.
-const VIEWS = ["dashboard-view", "player-view", "disclaimer-view", "done-view"];
+const VIEWS = ["dashboard-view", "player-view", "disclaimer-view", "done-view", "stats-view"];
 function showView(id) {
   VIEWS.forEach(v => { document.getElementById(v).style.display = (v === id) ? "flex" : "none"; });
   updateBannerVisibility(); // Update-Hinweis nur auf dem Dashboard zeigen
@@ -225,15 +226,29 @@ function finishRoutine() {
   clearInterval(timerId); releaseWakeLock();
   const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
   history.push(new Date().setHours(0, 0, 0, 0)); localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  const totalMin = Math.round(currentRoutine.exercises.reduce((s, e) => s + e.duration, 0) / 60);
+  localStorage.setItem("fb_min", Number(localStorage.getItem("fb_min") || 0) + totalMin); // Gesamtminuten
+  recordFocus(currentRoutine); // trainierte Bereiche merken (für "Was heute?")
   updateStreak();
   document.getElementById("done-ex").innerText = currentRoutine.exercises.length;
-  document.getElementById("done-min").innerText =
-    Math.round(currentRoutine.exercises.reduce((s, e) => s + e.duration, 0) / 60);
+  document.getElementById("done-min").innerText = totalMin;
   document.getElementById("done-streak").innerText = document.getElementById("streak-count").innerText;
   document.getElementById("stage").classList.remove("mirror");
   hideBreath();
   tone(660, 0.15); vibrate([60, 40, 120]);
   showView("done-view");
+}
+
+// Trainierte Bereiche (focus-Tags) mit Zeitstempel merken.
+async function recordFocus(routine) {
+  const ids = [...new Set(routine.exercises.map(e => e.poseId))];
+  const poses = await Promise.all(ids.map(id => db.poses.get(id)));
+  const tags = new Set();
+  poses.forEach(p => (p && p.focus || []).forEach(f => tags.add(f)));
+  const now = Date.now();
+  const focus = JSON.parse(localStorage.getItem("fb_focus") || "{}");
+  AREAS.forEach(a => { if (tags.has(a.tag)) focus[a.tag] = now; });
+  localStorage.setItem("fb_focus", JSON.stringify(focus));
 }
 
 function showPose(pose) {
@@ -284,7 +299,110 @@ function quitRoutine() {
   hideBreath();
   document.getElementById("stage").classList.remove("mirror");
   showView("dashboard-view");
+  renderSuggestion(); // Vorschlag nach jeder Session auffrischen
 }
+
+// --- "Was heute?" – adaptiver Vorschlag ---
+let suggestIdx = 0, suggestCands = [];
+
+function timeBucket(h) {
+  if (h >= 5 && h < 11)  return { routine: "wakeup",   label: "Guten Morgen – sanft wach werden" };
+  if (h >= 11 && h < 17) return { routine: "desk",     label: "Kurzer Reset für zwischendurch" };
+  if (h >= 17 && h < 22) return { routine: "backcare", label: "Abends den Rücken lockern" };
+  return { routine: "sleep", label: "Runterkommen für die Nacht" };
+}
+
+function buildCandidates() {
+  const DAY = 86400000, now = Date.now();
+  const focus = JSON.parse(localStorage.getItem("fb_focus") || "{}");
+  const ranked = AREAS.map(a => ({ ...a, stale: focus[a.tag] ? now - focus[a.tag] : Infinity }))
+                      .sort((x, y) => y.stale - x.stale);
+  const areaCands = ranked.map(a => ({
+    type: "area", tag: a.tag, label: a.label,
+    reason: a.stale === Infinity
+      ? `${a.label} · noch nie dran`
+      : `${a.label} · zuletzt vor ${Math.max(1, Math.floor(a.stale / DAY))} Tag(en)`
+  }));
+  const bucket = timeBucket(new Date().getHours());
+  const routineCand = { type: "routine", id: bucket.routine, reason: bucket.label };
+  const trained = Object.keys(focus).length;
+  // Wenig Daten -> Tageszeit führt; sonst der am stärksten vernachlässigte Bereich.
+  return trained < 3 ? [routineCand, ...areaCands] : [areaCands[0], routineCand, ...areaCands.slice(1)];
+}
+
+async function renderSuggestion() {
+  suggestCands = buildCandidates();
+  if (suggestIdx >= suggestCands.length) suggestIdx = 0;
+  const c = suggestCands[suggestIdx];
+  let title;
+  if (c.type === "area") {
+    title = `${c.label} · ${selectedMinutes} Min`;
+  } else {
+    const r = await db.routines.get(c.id);
+    const name = r ? r.meta.replace(/^\s*\S+\s+/, "") : c.id;
+    const mins = r ? Math.round(r.exercises.reduce((s, e) => s + e.duration, 0) / 60) : "";
+    title = `${name} · ${mins} Min`;
+  }
+  document.getElementById("sug-title").innerText = title;
+  document.getElementById("sug-reason").innerText = c.reason;
+  document.getElementById("suggest-card").style.display = "flex";
+}
+
+function startSuggestion() {
+  const c = suggestCands[suggestIdx];
+  if (!c) return;
+  if (c.type === "area") startArea(c.tag, c.label, selectedMinutes);
+  else startRoutine(c.id);
+}
+
+function shuffleSuggestion(ev) {
+  if (ev) ev.stopPropagation();
+  if (!suggestCands.length) return;
+  suggestIdx = (suggestIdx + 1) % suggestCands.length;
+  renderSuggestion();
+}
+
+// --- Verlauf / Statistik ---
+function showStats() {
+  const DAY = 86400000;
+  const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+  const days = [...new Set(history.map(ts => { const d = new Date(ts); d.setHours(0, 0, 0, 0); return d.getTime(); }))];
+  document.getElementById("st-sessions").innerText = history.length;
+  document.getElementById("st-min").innerText = Number(localStorage.getItem("fb_min") || 0);
+  document.getElementById("st-streak").innerText = document.getElementById("streak-count").innerText;
+  document.getElementById("st-longest").innerText = longestStreak(days);
+  buildHeatmap(history);
+  showView("stats-view");
+}
+
+function longestStreak(days) {
+  const DAY = 86400000;
+  const s = [...days].sort((a, b) => a - b);
+  let best = 0, cur = 0, prev = null;
+  for (const d of s) { cur = (prev !== null && d - prev === DAY) ? cur + 1 : 1; prev = d; if (cur > best) best = cur; }
+  return best;
+}
+
+function buildHeatmap(history) {
+  const DAY = 86400000;
+  const el = document.getElementById("heatmap"); el.innerHTML = "";
+  const counts = {};
+  history.forEach(ts => { const d = new Date(ts); d.setHours(0, 0, 0, 0); const k = d.getTime(); counts[k] = (counts[k] || 0) + 1; });
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const dow = (today.getDay() + 6) % 7; // Montag = 0
+  const startMonday = today.getTime() - dow * DAY - 11 * 7 * DAY; // 12 Wochen inkl. aktueller
+  for (let w = 0; w < 12; w++) {
+    for (let d = 0; d < 7; d++) {
+      const c = counts[startMonday + (w * 7 + d) * DAY] || 0;
+      const level = c === 0 ? 0 : (c === 1 ? 1 : (c === 2 ? 2 : 3));
+      const cell = document.createElement("div");
+      cell.className = "hm-cell hm-l" + level;
+      el.appendChild(cell);
+    }
+  }
+}
+
+function quitStats() { showView("dashboard-view"); }
 
 // Einseitige Übungen in zwei Seiten aufteilen (rechts + links), Haltezeit hälftig.
 function expandBilateral(exercises) {
@@ -393,7 +511,7 @@ function updateStreak() {
 }
 
 // --- App-Version + Update-Fluss (PWA, mit Nachfrage) ---
-const APP_VERSION = "1.0.9"; // wird beim Release automatisch auf den Tag gesetzt
+const APP_VERSION = "1.1.0"; // wird beim Release automatisch auf den Tag gesetzt
 let pendingReg = null, updateInitiated = false;
 
 function showUpdateBanner(reg) { pendingReg = reg; updateBannerVisibility(); }

@@ -20,14 +20,17 @@ Rahmen funktionieren.
 - **Inhalt**: deutsche Namen + Ausführungs-Cues in generierten Programmen
 - **Komfort**: gemerkte Dauer, Dark Mode, Atem-Pacing (4 s ein / 6 s aus)
 - **Qualität**: Daten-Invariantencheck (CI), Abgleichs-Tool für fehlende Bilder
+- **Update**: In-App-Update mit Nachfrage + Versionsanzeige, Auto-Stempelung im Release (v1.0.9)
+- **Verlauf & Vorschlag**: Statistik-Ansicht (Heatmap, Streak, Rekord) + adaptiver
+  „Was heute?"-Vorschlag aus dem lokalen Verlauf (v1.1.0)
 
 ---
 
 ## 🔜 Als Nächstes
 
-### Verlaufs- & Statistik-Ansicht
-Kalender-Heatmap der Trainingstage, Gesamtminuten, aktuelle/längste Streak.
-Baut auf den vorhandenen `fb_history`-Daten auf. **Aufwand: klein–mittel · Wirkung: hoch.**
+### Routinen teilen per Link
+Eigene/aktuelle Routine komprimiert im URL-Hash – Empfänger spielt sie ohne Konto ab.
+**Aufwand: klein–mittel · Wirkung: hoch.**
 
 ---
 
@@ -69,10 +72,9 @@ Eine eigene Routine wird **komprimiert in den URL-Hash** kodiert (`bend.fitmitba
 Wer den Link öffnet, bekommt genau diese Routine – kein Server, kein Konto. Perfekt zum Teilen
 mit Freund:innen oder als „heute mit mir mitmachen"-Link.
 
-### 2. „Was heute?" – adaptiver Vorschlag
-Ein Tipp-Vorschlag, der aus dem lokalen Verlauf lernt: welcher **Bereich zuletzt vernachlässigt**
-wurde, kombiniert mit **Tageszeit** (morgens Wake-up, abends Schlaf-Flow). Ein Knopf, ein
-sinnvoll ausbalanciertes Programm – vollständig clientseitig.
+### 2. „Was heute?" – adaptiver Vorschlag ✅ (v1.1.0)
+Umgesetzt: lernt aus dem lokalen Verlauf (vernachlässigter Bereich + Tageszeit) und schlägt
+oben auf dem Dashboard ein passendes Programm vor, mit Begründung und 🔀 für Alternativen.
 
 ### 3. Vollbild-Atem-Modus („Breath Orb")
 Ein eigener Zen-Modus mit einer schön animierten Atemkugel, die sich im 4/6-Rhythmus weitet und
