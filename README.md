@@ -51,6 +51,7 @@ data/poses.json     58 Posen (Stammdaten)
 data/routines.json  15 kuratierte Routinen
 vendor/dexie.min.js IndexedDB-Wrapper (lokal gevendored, kein CDN)
 img/                Pose-Bilder (img/<id>.png) + App-Icon
+ROADMAP.md          Geplante Features & Ideen
 docs/handover.md    Ausführliche Architektur- & Datendoku
 docs/uebungen.md    Alle 58 Übungen mit Beschreibung
 tools/check-poses.py     Abgleich: welche Pose-Bilder fehlen noch?
