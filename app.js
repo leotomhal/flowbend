@@ -86,7 +86,7 @@ async function initApp() {
 }
 
 // Genau eine Vollbild-Ansicht sichtbar schalten.
-const VIEWS = ["dashboard-view", "player-view", "disclaimer-view", "done-view", "stats-view"];
+const VIEWS = ["dashboard-view", "player-view", "disclaimer-view", "done-view", "stats-view", "breath-view"];
 function showView(id) {
   VIEWS.forEach(v => { document.getElementById(v).style.display = (v === id) ? "flex" : "none"; });
   updateBannerVisibility(); // Update-Hinweis nur auf dem Dashboard zeigen
@@ -137,7 +137,11 @@ async function startArea(tag, label, minutes) {
   const pool = poses.filter(p => !p.circuitOnly && Array.isArray(p.focus) && p.focus.includes(tag));
   if (!pool.length) { alert("Für diesen Bereich sind keine Posen vorhanden."); return; }
   // Reihenfolge: stehend -> knien -> sitzen -> liegen (Aufwärm- zu Ausklang-Bogen).
-  pool.sort((x, y) => (POSITION_RANK[x.position] ?? 9) - (POSITION_RANK[y.position] ?? 9));
+  // Innerhalb jeder Positionsgruppe mischen -> jede Session variiert, der Bogen bleibt.
+  const groups = {};
+  pool.forEach(p => { const r = POSITION_RANK[p.position] ?? 9; (groups[r] ||= []).push(p); });
+  const ordered = Object.keys(groups).sort((a, b) => a - b).flatMap(k => shuffle(groups[k]));
+  pool.length = 0; pool.push(...ordered);
 
   const target = minutes * 60;
   const slots = Math.max(3, Math.round(target / BASE_HOLD));
@@ -499,6 +503,8 @@ async function startGeneratedCircuit() {
   playCircuit({ id: "gen", meta: `🎯 Zirkel · ${selectedMinutes} Min · ${selectedIntensity}`, rounds, work, rest, exercises });
 }
 function hash(s) { s = String(s); let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h); }
+// Fisher-Yates: mischt ein Array in-place und gibt es zurück.
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 async function playCircuit(w) {
   if (!w) { alert("Zirkel nicht gefunden."); return; }
@@ -732,6 +738,93 @@ function startBreath() {
 function stopBreath() { clearInterval(breathId); breathId = null; }
 function hideBreath() { stopBreath(); document.getElementById("breath-cue").style.display = "none"; }
 
+// --- Vollbild-Atem-Modus ("Breath Orb") ------------------------------------
+// Eigenständiger Zen-Modus: animierte Atemkugel (4 s ein / 6 s aus), optionaler
+// generativer Ambient-Klang (WebAudio, keine Audiodateien), Wake Lock.
+let orbId = null, orbTimerId = null, orbEndsAt = 0, ambientWanted = false;
+
+function openBreath(sec) {
+  showView("breath-view");
+  requestWakeLock();
+  document.querySelectorAll("#breath-durs button").forEach(b => b.classList.toggle("active", Number(b.dataset.sec) === sec));
+
+  // Atemkugel-Animation frisch starten, damit Wort & Skalierung synchron laufen.
+  const orb = document.getElementById("breath-orb");
+  orb.style.animation = "none"; void orb.offsetWidth; orb.style.animation = "";
+  const word = document.getElementById("breath-word");
+  const IN = 4000, CYCLE = 10000;
+  breathBase = Date.now();
+  const upd = () => { word.innerText = (Date.now() - breathBase) % CYCLE < IN ? "Einatmen" : "Ausatmen"; };
+  upd(); clearInterval(orbId); orbId = setInterval(upd, 200);
+
+  // Restzeit / Countdown (0 = unendlich, bis „Fertig").
+  const info = document.getElementById("breath-timeleft");
+  clearInterval(orbTimerId); orbTimerId = null;
+  if (sec > 0) {
+    orbEndsAt = Date.now() + sec * 1000;
+    const tick = () => {
+      const left = Math.max(0, Math.round((orbEndsAt - Date.now()) / 1000));
+      info.innerText = `noch ${String(Math.floor(left / 60)).padStart(2, "0")}:${String(left % 60).padStart(2, "0")}`;
+      if (left <= 0) { tone(660, 0.2); vibrate([60, 40, 120]); closeBreath(); }
+    };
+    tick(); orbTimerId = setInterval(tick, 250);
+  } else {
+    info.innerText = 'läuft · beende mit „Fertig"';
+  }
+
+  if (ambientWanted) startAmbient(); // Klang beibehalten, wenn zuvor aktiviert
+}
+
+function closeBreath() {
+  clearInterval(orbId); orbId = null;
+  clearInterval(orbTimerId); orbTimerId = null;
+  stopAmbient();
+  releaseWakeLock();
+  showView("dashboard-view");
+}
+
+function toggleAmbient() {
+  ambientWanted = !ambientWanted;
+  document.getElementById("breath-sound").innerText = ambientWanted ? "🔊 Klang an" : "🔈 Klang aus";
+  if (ambientWanted) startAmbient(); else stopAmbient();
+}
+
+// Generativer Ambient-Drone, dessen Lautstärke im Atemrhythmus schwillt.
+let ambient = null;
+function startAmbient() {
+  if (ambient) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    const master = audioCtx.createGain(); master.gain.value = 0.0001; master.connect(audioCtx.destination);
+    const lp = audioCtx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 520; lp.connect(master);
+    const osc = [55, 110, 110.6].map(f => { const o = audioCtx.createOscillator(); o.type = "sine"; o.frequency.value = f; o.connect(lp); o.start(); return o; });
+    ambient = { master, osc, env: null };
+    ambientEnvelope();                       // sofort erste Atemwelle
+    ambient.env = setInterval(ambientEnvelope, 10000); // pro 10-s-Zyklus
+  } catch (e) { ambient = null; /* Audio nicht verfügbar – Modus läuft trotzdem */ }
+}
+function ambientEnvelope() {
+  if (!ambient) return;
+  const t = audioCtx.currentTime, g = ambient.master.gain;
+  g.cancelScheduledValues(t);
+  g.setValueAtTime(Math.max(g.value, 0.0001), t);
+  g.linearRampToValueAtTime(0.05, t + 4);    // Einatmen: anschwellen
+  g.linearRampToValueAtTime(0.012, t + 10);  // Ausatmen: abklingen
+}
+function stopAmbient() {
+  if (!ambient) return;
+  const a = ambient; ambient = null;
+  clearInterval(a.env);
+  try {
+    const t = audioCtx.currentTime;
+    a.master.gain.cancelScheduledValues(t);
+    a.master.gain.setValueAtTime(Math.max(a.master.gain.value, 0.0001), t);
+    a.master.gain.linearRampToValueAtTime(0.0001, t + 0.4); // sanft ausblenden, kein Knacken
+  } catch (e) {}
+  setTimeout(() => a.osc.forEach(o => { try { o.stop(); } catch (e) {} }), 500);
+}
+
 // Ton + Vibration gemeinsam an/aus (im Player, oben rechts).
 function toggleCues() {
   cuesOn = !cuesOn;
@@ -763,7 +856,7 @@ function updateStreak() {
 }
 
 // --- App-Version + Update-Fluss (PWA, mit Nachfrage) ---
-const APP_VERSION = "1.4.0"; // wird beim Release automatisch auf den Tag gesetzt
+const APP_VERSION = "1.5.0"; // wird beim Release automatisch auf den Tag gesetzt
 let pendingReg = null, updateInitiated = false;
 
 function showUpdateBanner(reg) { pendingReg = reg; updateBannerVisibility(); }

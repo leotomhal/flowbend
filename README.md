@@ -19,6 +19,10 @@ Wake-Lock, Atem-Pacing, Ton/Vibration und Pose-Bildern führt durch die Übungen
 - **15 kuratierte Routinen** mit ausformulierten deutschen Texten (Aufwachen, Schreibtisch-Reset, Schlaf, Rücken, Balance …).
 - **Bereichs-Generator:** Körperbereich + Dauer (5/10/15 Min) → on demand ein Programm aus den Mobilitäts-Posen; einseitige Posen werden automatisch beidseitig gespielt (rechts/links).
 - **Atem-Pacing** (4 s ein / 6 s aus) während des Haltens.
+- **Bereichs-Generator mit Shuffle:** jede Session variiert die Posen-Auswahl, der Bogen stehend → liegen bleibt erhalten.
+
+**Durchatmen**
+- **Vollbild-Atem-Modus** („Breath Orb"): animierte Atemkugel im 4/6-Rhythmus, wählbare Dauer (1/3 Min oder ∞), optionaler **generativer Ambient-Klang** (WebAudio, offline, keine Audiodateien).
 
 **Kraft**
 - **Umschalter Beweglichkeit ⇄ Kraft** auf dem Dashboard.

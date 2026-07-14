@@ -8,7 +8,7 @@ Rahmen funktionieren.
 
 ---
 
-## ✅ Bereits ausgeliefert (v1.0.0 – v1.4.0)
+## ✅ Bereits ausgeliefert (v1.0.0 – v1.5.0)
 
 - Rebrand ZenFlow → flowbend, lokal gevendortes Dexie, README/Doku
 - **PWA**: Manifest, Service Worker (offline), installierbar, eigenes App-Icon (Android/iOS)
@@ -31,6 +31,9 @@ Rahmen funktionieren.
 - **Teilbare Fortschritts-Karte**: nach der Session eine Canvas-Karte
   (Übungen · Minuten · 🔥 Streak) via Web Share teilen oder als PNG speichern;
   Footer mit Repo-Link + Kontakt (v1.4.0)
+- **Vollbild-Atem-Modus** („Breath Orb") mit animierter Atemkugel + optionalem
+  generativem Ambient-Klang; **Shuffle im Generator** (Abwechslung je Session,
+  Positions-Bogen bleibt) (v1.5.0)
 
 ---
 
@@ -50,7 +53,7 @@ Eigene/aktuelle Routine komprimiert im URL-Hash – Empfänger spielt sie ohne K
 - **Favoriten & „zuletzt genutzt"** auf dem Dashboard.
 - **Einstellungen-Ansicht**: Haltezeit, Prep-Länge, Signale – zentral statt verstreut.
 - **Variable Haltezeiten** je Pose/Typ (`holdSeconds`): Entspannung länger, Kraft kürzer.
-- **Abwechslung im Generator**: Shuffle innerhalb der Positionsgruppen (aktuell deterministisch).
+- ~~**Abwechslung im Generator**: Shuffle innerhalb der Positionsgruppen.~~ ✅ (v1.5.0)
 - **Warm-up/Cool-down** automatisch vor-/anhängen.
 
 ### Inhalt
