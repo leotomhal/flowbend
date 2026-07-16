@@ -34,6 +34,8 @@ Rahmen funktionieren.
 - **Vollbild-Atem-Modus** („Breath Orb") mit animierter Atemkugel + optionalem
   generativem Ambient-Klang; **Shuffle im Generator** (Abwechslung je Session,
   Positions-Bogen bleibt) (v1.5.0)
+- **Tägliche Challenge**: datums-gesätes Mini-Programm (jeden Tag dieselbe deterministische
+  Auswahl für alle), Dashboard-Kachel mit Datum-Badge, Erledigt-Status + Challenge-Streak (v1.6.0)
 
 ---
 
@@ -97,10 +99,11 @@ Umgesetzt: nach einer Session wird per **Canvas eine Zusammenfassungs-Karte** (1
 gerendert (Übungen · Minuten · 🔥 Streak · Datum). „Karte teilen" nutzt die **Web Share API**
 (mobil/PWA) mit Download-Fallback am Desktop – ganz ohne Social-Backend.
 
-### 5. Tägliche Challenge
-Ein **datums-gesätes** Mini-Programm (`Seed = Datum`): alle bekommen am selben Tag dieselbe
-kurze Challenge, deterministisch erzeugt – ein täglicher Anreiz, ohne dass irgendwo ein Server
-etwas ausspielen muss.
+### 5. Tägliche Challenge ✅ (v1.6.0)
+Umgesetzt: ein **datums-gesätes** Mini-Programm (`Seed = lokale Mitternacht`): alle bekommen am
+selben Tag dieselbe kurze Challenge (6 Übungen, ~5 Min), deterministisch aus dem Posen-Pool
+erzeugt und in den Positions-Bogen gebracht. Dashboard-Kachel mit Datum-Badge, Erledigt-Status
+und eigener Challenge-Streak – ein täglicher Anreiz, ganz ohne Server.
 
 ---
 

@@ -55,6 +55,12 @@ const AREAS = [
 const POSITION_RANK = { standing: 0, kneeling: 1, seated: 2, lying: 3 };
 const BASE_HOLD = 40; // Sekunden pro Übung (Zielwert)
 
+// Tages-Challenge: datums-gesätes Mini-Programm – alle bekommen am selben Tag
+// dieselbe Auswahl, komplett deterministisch (kein Server, keine Zufallszahl).
+const CHALLENGE_KEY = "fb_challenge"; // erledigte Challenge-Tage (Midnight-Timestamps)
+const CHALLENGE_SLOTS = 6;            // Übungen pro Challenge
+const CHALLENGE_HOLD = 45;            // Haltezeit je Übung (~5 Min inkl. Prep)
+
 async function initApp() {
   const statusEl = document.getElementById("db-status");
   try {
@@ -80,7 +86,7 @@ async function initApp() {
       ? "Offline-Modus (lokaler Cache)"
       : "Keine Daten verfuegbar – bitte einmal online laden";
   }
-  renderDashboardFromDB(); buildAreaUI(); updateStreak(); updateCueButton();
+  renderDashboardFromDB(); buildAreaUI(); updateStreak(); updateCueButton(); renderChallenge();
   document.getElementById("app-version").innerText = "v" + APP_VERSION;
   wireModeUI(); setMode(mode); // Sektion (Beweglichkeit/Kraft) + Vorschlag
 }
@@ -157,6 +163,66 @@ async function startArea(tag, label, minutes) {
     exercises.push({ title: p.nameDe || p.name || p.id, desc: p.cue || "Ruhig halten und tief atmen.", duration: durations[i], poseId: p.id });
   }
   playRoutine({ id: `gen-${tag}-${minutes}`, meta: `🎯 ${label} · ${minutes} Min`, exercises });
+}
+
+// --- Tages-Challenge (datums-gesät, deterministisch) ---
+// Der Tages-Seed (lokale Mitternacht) bestimmt die Auswahl: gleiches Datum ⇒
+// gleiche Challenge. Auswahl per hash(id+seed) gemischt, dann in den
+// Positions-Bogen (stehend → liegen) sortiert – wie der Bereichs-Generator.
+function challengeSeed() { return new Date().setHours(0, 0, 0, 0); }
+
+async function startDailyChallenge() {
+  const poses = (await db.poses.toArray()).filter(p => !p.circuitOnly && Array.isArray(p.focus));
+  if (poses.length < 3) { alert("Für die Challenge sind keine Übungen verfügbar."); return; }
+  const seed = challengeSeed();
+  const picked = [...poses]
+    .sort((a, b) => (hash(a.id + seed) % 10007) - (hash(b.id + seed) % 10007)) // Tagesauswahl
+    .slice(0, CHALLENGE_SLOTS)
+    .sort((a, b) => (POSITION_RANK[a.position] ?? 9) - (POSITION_RANK[b.position] ?? 9)); // Bogen
+  const exercises = picked.map(p => ({
+    title: p.nameDe || p.name || p.id,
+    desc: p.cue || "Ruhig halten und tief atmen.",
+    duration: CHALLENGE_HOLD,
+    poseId: p.id
+  }));
+  playRoutine({ id: "daily-" + seed, meta: "🗓️ Tages-Challenge", exercises, isChallenge: true });
+}
+
+// Kachel-Zustand: Datum-Badge, Erledigt-Status heute und Challenge-Streak.
+function renderChallenge() {
+  const el = document.getElementById("challenge-entry");
+  if (!el) return;
+  const done = JSON.parse(localStorage.getItem(CHALLENGE_KEY) || "[]");
+  const today = challengeSeed();
+  const d = new Date(today);
+  document.getElementById("ch-day").innerText = d.getDate();
+  document.getElementById("ch-mon").innerText = d.toLocaleDateString("de-DE", { month: "short" }).replace(".", "").toUpperCase();
+  const doneToday = done.includes(today);
+  const streak = challengeStreak(done);
+  const streakTxt = streak > 1 ? ` · 🔥 ${streak} Tage` : "";
+  el.classList.toggle("done", doneToday);
+  document.getElementById("ch-title").innerText = doneToday ? "Tages-Challenge geschafft ✓" : "Tages-Challenge";
+  document.getElementById("ch-sub").innerText = doneToday
+    ? `Stark! Morgen wartet die nächste${streakTxt}`
+    : `${CHALLENGE_SLOTS} Übungen · ~5 Min · jeden Tag neu${streakTxt}`;
+}
+
+// Zusammenhängende Challenge-Tage bis heute (oder gestern) – wie die Trainings-Streak.
+function challengeStreak(done) {
+  const DAY = 86400000;
+  const days = [...new Set(done)].sort((a, b) => b - a);
+  if (!days.length) return 0;
+  const today = challengeSeed();
+  if (days[0] !== today && days[0] !== today - DAY) return 0;
+  let streak = 0, expected = days[0];
+  for (const d of days) { if (d === expected) { streak++; expected -= DAY; } else if (d < expected) break; }
+  return streak;
+}
+
+function markChallengeDone() {
+  const done = JSON.parse(localStorage.getItem(CHALLENGE_KEY) || "[]");
+  const today = challengeSeed();
+  if (!done.includes(today)) { done.push(today); localStorage.setItem(CHALLENGE_KEY, JSON.stringify(done)); }
 }
 
 // Spielt eine fertige Routine ab (egal ob aus DB oder generiert).
@@ -265,6 +331,7 @@ function finishRoutine() {
   const totalMin = Math.round(currentRoutine.exercises.reduce((s, e) => s + e.duration, 0) / 60);
   localStorage.setItem("fb_min", Number(localStorage.getItem("fb_min") || 0) + totalMin); // Gesamtminuten
   recordFocus(currentRoutine); // trainierte Bereiche merken (für "Was heute?")
+  if (currentRoutine.isChallenge) markChallengeDone(); // Tages-Challenge abgehakt
   updateStreak();
   document.getElementById("done-ex").innerText = currentRoutine.exercises.length;
   document.getElementById("done-min").innerText = totalMin;
@@ -419,6 +486,7 @@ function quitRoutine() {
   document.getElementById("player-view").classList.remove("resting");
   showView("dashboard-view");
   renderSuggestion(); // Vorschlag nach jeder Session auffrischen
+  renderChallenge(); // Challenge-Kachel (Erledigt/Streak) aktualisieren
 }
 
 // --- Modus Beweglichkeit / Kraft ---
