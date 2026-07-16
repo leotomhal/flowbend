@@ -84,6 +84,16 @@
     #breath-entry b { font-size: 0.95rem; font-weight: 600; color: var(--text-main); }
     #breath-entry small { display: block; color: var(--text-sub); font-size: 0.72rem; margin-top: 2px; }
 
+    /* Tages-Challenge-Kachel (datums-gesät, jeden Tag neu) */
+    #challenge-entry { display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, #fff, var(--accent-light)); border: 1px solid rgba(217,119,54,0.15); border-radius: 20px; padding: 14px 18px; margin-bottom: 14px; cursor: pointer; transition: transform 0.25s ease; }
+    #challenge-entry:hover { transform: translateY(-2px); }
+    #challenge-entry .ch-badge { width: 44px; height: 44px; border-radius: 13px; flex: none; background: var(--accent-warm); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; box-shadow: 0 6px 14px rgba(217,119,54,0.22); }
+    #challenge-entry .ch-badge b { font-size: 1.15rem; font-weight: 700; }
+    #challenge-entry .ch-badge span { font-size: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+    #challenge-entry .ch-text b { font-size: 0.95rem; font-weight: 600; color: var(--text-main); }
+    #challenge-entry .ch-text small { display: block; color: var(--text-sub); font-size: 0.72rem; margin-top: 2px; }
+    #challenge-entry.done .ch-badge { background: #3a9d6e; box-shadow: 0 6px 14px rgba(58,157,110,0.22); }
+
     /* Vollbild-Atem-Modus */
     #breath-view { display: none; justify-content: space-between; align-items: center; text-align: center; background: radial-gradient(circle at 50% 42%, var(--accent-light), var(--card-bg) 70%); margin: -30px; padding: 40px 30px; border-radius: 40px; }
     .breath-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; }
@@ -187,6 +197,10 @@
           <div class="sug-reason" id="sug-reason"></div>
         </div>
         <button class="sug-shuffle" onclick="shuffleSuggestion(event)" title="Anderer Vorschlag">🔀</button>
+      </div>
+      <div id="challenge-entry" onclick="startDailyChallenge()">
+        <span class="ch-badge"><b id="ch-day">–</b><span id="ch-mon"></span></span>
+        <div class="ch-text"><b id="ch-title">Tages-Challenge</b><small id="ch-sub">Jeden Tag ein neues Mini-Programm</small></div>
       </div>
       <div id="breath-entry" onclick="openBreath(60)">
         <span class="be-orb"></span>

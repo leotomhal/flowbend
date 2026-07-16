@@ -102,6 +102,14 @@ Zählt **zusammenhängende** Trainingstage bis heute (oder gestern), gespeichert
 `localStorage` unter dem Key `fb_history`. Trainiert man einen Tag nicht, beginnt der
 Zähler beim nächsten Training wieder bei 1.
 
+### Tages-Challenge
+Datums-gesätes Mini-Programm (`startDailyChallenge`): Seed = lokale Mitternacht, die Auswahl
+per `hash(id + seed)` gemischt und in den Positions-Bogen sortiert → **gleiches Datum ⇒ gleiche
+Challenge** (deterministisch, kein Server, kein Zufall). Dashboard-Kachel mit Datum-Badge zeigt
+Erledigt-Status + Challenge-Streak; abgeschlossene Tage liegen als Midnight-Timestamps unter
+`fb_challenge`. Läuft über den normalen Flow-Player (`isChallenge`-Flag, einseitige Posen werden
+wie üblich beidseitig gespielt).
+
 ### App-Version & Update
 `APP_VERSION` (app.js) + `CACHE` (sw.js) werden beim Release automatisch auf den Tag gestempelt.
 Ein neuer SW pro Release ⇒ die App zeigt auf dem Dashboard ein „Neue Version verfügbar"-Banner
