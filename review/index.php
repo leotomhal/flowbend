@@ -6,6 +6,7 @@ require __DIR__ . '/lib.php';
 
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
 $flash  = '';
+$flashType = 'ok';
 
 if ($action === 'logout') {
     logout();
@@ -20,6 +21,7 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     $flash = 'Code nicht erkannt. Bitte prüfen.';
+    $flashType = 'err';
 }
 
 if ($action === 'rate' && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -34,9 +36,9 @@ if ($action === 'rate' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             norm_score($_POST['desc_score'] ?? ''),
             (string) ($_POST['comment'] ?? '')
         );
-        $flash = 'Bewertung gespeichert: ' . ($pid);
+        flash_set('Bewertung gespeichert.');
     } else {
-        $flash = 'Unbekannte Übung.';
+        flash_set('Unbekannte Übung.', 'err');
     }
     // Zurück zur Bewerten-Ansicht, Anker auf die Übung.
     header('Location: index.php?view=rate#pose-' . rawurlencode($pid));
@@ -44,6 +46,47 @@ if ($action === 'rate' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $reviewer = current_reviewer();
+
+/* ---- Reviewer-Verwaltung (nur Admin) ---- */
+if (str_starts_with($action, 'rev_') && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_login();
+    if (!$reviewer || !$reviewer['admin']) {
+        http_response_code(403);
+        exit('Nur für Admins.');
+    }
+    check_csrf();
+    $id = (int) ($_POST['id'] ?? 0);
+    switch ($action) {
+        case 'rev_add':
+            $code = add_reviewer((string) ($_POST['name'] ?? ''), !empty($_POST['is_admin']));
+            flash_set('Neuer Code für „' . trim((string) ($_POST['name'] ?? 'Reviewer')) . '": ' . $code, 'code');
+            break;
+        case 'rev_regen':
+            $code = regen_reviewer_code($id);
+            flash_set($code ? ('Neuer Code: ' . $code) : 'Reviewer nicht gefunden.', $code ? 'code' : 'err');
+            break;
+        case 'rev_toggle_active':
+            set_reviewer_active($id, (string) ($_POST['to'] ?? '') === '1');
+            flash_set('Status aktualisiert.');
+            break;
+        case 'rev_toggle_admin':
+            set_reviewer_admin($id, (string) ($_POST['to'] ?? '') === '1');
+            flash_set('Admin-Recht aktualisiert.');
+            break;
+        case 'rev_delete':
+            delete_reviewer($id);
+            flash_set('Reviewer:in gelöscht.');
+            break;
+    }
+    header('Location: index.php?view=settings');
+    exit;
+}
+
+/* Flash aus vorherigem Redirect übernehmen. */
+if ($sf = flash_get()) {
+    $flash = $sf['m'];
+    $flashType = $sf['t'];
+}
 
 /* CSV-Export (nur Admin) */
 if ($action === 'export' && $reviewer && $reviewer['admin']) {
@@ -77,7 +120,7 @@ $view = $_GET['view'] ?? 'rate';
     <div class="card login-card">
         <h1>flowbend · Review</h1>
         <p class="sub">Fachliche Prüfung der Übungen für Physiotherapeut:innen.</p>
-        <?php if ($flash): ?><p class="flash err"><?= h($flash) ?></p><?php endif; ?>
+        <?php if ($flash): ?><p class="flash <?= h($flashType) ?>"><?= h($flash) ?></p><?php endif; ?>
         <form method="post" action="index.php">
             <input type="hidden" name="action" value="login">
             <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
@@ -95,6 +138,9 @@ $view = $_GET['view'] ?? 'rate';
     <nav>
         <a href="?view=rate" class="<?= $view === 'rate' ? 'active' : '' ?>">Bewerten</a>
         <a href="?view=board" class="<?= $view === 'board' ? 'active' : '' ?>">Übersicht</a>
+        <?php if ($reviewer['admin']): ?>
+            <a href="?view=settings" class="<?= $view === 'settings' ? 'active' : '' ?>">Einstellungen</a>
+        <?php endif; ?>
     </nav>
     <div class="who">
         <span><?= h($reviewer['name']) ?><?= $reviewer['admin'] ? ' · Admin' : '' ?></span>
@@ -105,9 +151,81 @@ $view = $_GET['view'] ?? 'rate';
     </div>
 </header>
 
-<?php if ($flash): ?><p class="flash ok"><?= h($flash) ?></p><?php endif; ?>
+<?php if ($flash): ?><p class="flash <?= h($flashType) ?>"><?= h($flash) ?></p><?php endif; ?>
 
-<?php if ($view === 'board'):
+<?php if ($view === 'settings' && $reviewer['admin']):
+    /* ---------- Einstellungen: Codes verwalten ---------- */
+    $revs = list_reviewers();
+    $cfgReviewers = cfg()['reviewers'] ?? [];
+    ?>
+    <main class="wrap">
+        <section>
+            <h2>Neue:n Reviewer:in anlegen</h2>
+            <form method="post" action="index.php" class="addrev">
+                <input type="hidden" name="action" value="rev_add">
+                <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
+                <input type="text" name="name" placeholder="Name (z. B. Physio Müller)" required>
+                <label class="chk"><input type="checkbox" name="is_admin" value="1"> Admin</label>
+                <button type="submit" class="btn">Code erzeugen</button>
+            </form>
+            <p class="hint">Der Zugangscode wird <b>nur einmal</b> nach dem Anlegen angezeigt — gleich kopieren und weitergeben. Er wird nur verschlüsselt gespeichert und lässt sich nicht wieder anzeigen (nur neu erzeugen).</p>
+        </section>
+
+        <section>
+            <h2>Verwaltete Zugänge (<?= count($revs) ?>)</h2>
+            <?php if (!$revs): ?><p class="muted">Noch keine in der App angelegten Reviewer:innen.</p><?php endif; ?>
+            <?php foreach ($revs as $r): ?>
+                <div class="revrow <?= $r['active'] ? '' : 'inactive' ?>">
+                    <div class="revinfo">
+                        <b><?= h($r['name']) ?></b>
+                        <?php if ($r['is_admin']): ?><span class="tag admin">Admin</span><?php endif; ?>
+                        <?php if (!$r['active']): ?><span class="tag off">deaktiviert</span><?php endif; ?>
+                        <small>angelegt <?= h(substr((string) $r['created_at'], 0, 10)) ?><?= $r['last_login'] ? ' · zuletzt aktiv ' . h(substr((string) $r['last_login'], 0, 10)) : ' · noch nie angemeldet' ?></small>
+                    </div>
+                    <div class="revactions">
+                        <form method="post" action="index.php" onsubmit="return confirm('Neuen Code erzeugen? Der alte wird sofort ungültig.')">
+                            <input type="hidden" name="action" value="rev_regen">
+                            <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
+                            <input type="hidden" name="id" value="<?= (int) $r['id'] ?>">
+                            <button class="link">Neuer Code</button>
+                        </form>
+                        <form method="post" action="index.php">
+                            <input type="hidden" name="action" value="rev_toggle_active">
+                            <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
+                            <input type="hidden" name="id" value="<?= (int) $r['id'] ?>">
+                            <input type="hidden" name="to" value="<?= $r['active'] ? '0' : '1' ?>">
+                            <button class="link"><?= $r['active'] ? 'Deaktivieren' : 'Aktivieren' ?></button>
+                        </form>
+                        <form method="post" action="index.php">
+                            <input type="hidden" name="action" value="rev_toggle_admin">
+                            <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
+                            <input type="hidden" name="id" value="<?= (int) $r['id'] ?>">
+                            <input type="hidden" name="to" value="<?= $r['is_admin'] ? '0' : '1' ?>">
+                            <button class="link"><?= $r['is_admin'] ? 'Admin entziehen' : 'Zu Admin' ?></button>
+                        </form>
+                        <form method="post" action="index.php" onsubmit="return confirm('Reviewer:in wirklich löschen? Bereits abgegebene Bewertungen bleiben erhalten.')">
+                            <input type="hidden" name="action" value="rev_delete">
+                            <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
+                            <input type="hidden" name="id" value="<?= (int) $r['id'] ?>">
+                            <button class="link danger">Löschen</button>
+                        </form>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </section>
+
+        <section>
+            <h2>Notzugang aus <code>config.php</code></h2>
+            <p class="hint">Diese Codes sind fest in der Datei hinterlegt und dienen als Bootstrap/Notzugang. Sie lassen sich hier <b>nicht</b> ändern (nur per SFTP in <code>config.php</code>) — so sperrst du dich nie komplett aus.</p>
+            <div class="chips">
+                <?php foreach ($cfgReviewers as $meta): $nm = is_array($meta) ? ($meta['name'] ?? 'Reviewer') : (string) $meta; $ad = is_array($meta) ? !empty($meta['admin']) : false; ?>
+                    <span class="chip"><?= h($nm) ?><?= $ad ? ' · Admin' : '' ?></span>
+                <?php endforeach; ?>
+            </div>
+        </section>
+    </main>
+
+<?php elseif ($view === 'board'):
     /* ---------- Übersichts-Board ---------- */
     $stats = pose_stats();
     $byId  = poses_by_id();

@@ -55,6 +55,17 @@ function db(): PDO
             updated_at    TEXT NOT NULL,
             UNIQUE(pose_id, reviewer_code)
         )');
+        // In der App verwaltete Reviewer:innen. Codes werden NUR gehasht gespeichert
+        // (Klartext wird einmalig beim Erzeugen angezeigt).
+        $pdo->exec('CREATE TABLE IF NOT EXISTS reviewers (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            code_hash  TEXT NOT NULL,
+            name       TEXT NOT NULL,
+            is_admin   INTEGER NOT NULL DEFAULT 0,
+            active     INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL,
+            last_login TEXT
+        )');
     }
     return $pdo;
 }
@@ -111,29 +122,41 @@ function require_login(): array
     return $r;
 }
 
-/** Login per persönlichem Code. Gibt true bei Erfolg. */
+/** Login per persönlichem Code. Gibt true bei Erfolg.
+    Reihenfolge: 1) Bootstrap-Codes aus config.php, 2) in der App verwaltete (gehashte) Codes. */
 function try_login(string $code): bool
 {
     $code = trim($code);
-    $reviewers = cfg()['reviewers'] ?? [];
-    // Konstante-Zeit-Vergleich gegen alle Codes (kein Timing-Leak über die Länge).
-    $matchName = null;
-    $matchAdmin = false;
-    $matchCode = null;
-    foreach ($reviewers as $c => $meta) {
-        if (hash_equals((string) $c, $code)) {
-            $matchName = is_array($meta) ? ($meta['name'] ?? 'Reviewer') : (string) $meta;
-            $matchAdmin = is_array($meta) ? !empty($meta['admin']) : false;
-            $matchCode = (string) $c;
-        }
-    }
-    if ($matchCode === null) {
+    if ($code === '') {
         return false;
     }
+    // 1) Bootstrap/Notzugang aus config.php (Klartext-Codes).
+    foreach (cfg()['reviewers'] ?? [] as $c => $meta) {
+        if (hash_equals((string) $c, $code)) {
+            $name  = is_array($meta) ? ($meta['name'] ?? 'Reviewer') : (string) $meta;
+            $admin = is_array($meta) ? !empty($meta['admin']) : false;
+            // Stabile, nicht-geheime Reviewer-Kennung (Code taucht nicht in ratings auf).
+            return do_login('c' . substr(hash('sha256', (string) $c), 0, 12), $name, $admin);
+        }
+    }
+    // 2) In der DB verwaltete Reviewer:innen (gehashte Codes).
+    foreach (db()->query('SELECT id, code_hash, name, is_admin FROM reviewers WHERE active = 1')->fetchAll() as $r) {
+        if (password_verify($code, $r['code_hash'])) {
+            db()->prepare('UPDATE reviewers SET last_login = :ts WHERE id = :id')
+                ->execute([':ts' => date('c'), ':id' => $r['id']]);
+            return do_login('r' . $r['id'], $r['name'], (bool) $r['is_admin']);
+        }
+    }
+    return false;
+}
+
+/** Session für eine:n Reviewer:in setzen. $code = stabile, nicht-geheime Kennung. */
+function do_login(string $code, string $name, bool $admin): bool
+{
     session_regenerate_id(true);
-    $_SESSION['rev_code']  = $matchCode;
-    $_SESSION['rev_name']  = $matchName;
-    $_SESSION['rev_admin'] = $matchAdmin;
+    $_SESSION['rev_code']  = $code;
+    $_SESSION['rev_name']  = $name;
+    $_SESSION['rev_admin'] = $admin;
     return true;
 }
 
@@ -259,6 +282,73 @@ function comments_for(string $poseId): array
     );
     $stmt->execute([':p' => $poseId]);
     return $stmt->fetchAll();
+}
+
+/* ---- Reviewer-Verwaltung (nur Admin, in der DB) ----------------------- */
+
+/** Zufälligen Zugangscode erzeugen (16 Hex-Zeichen = 64 Bit). */
+function gen_code(): string
+{
+    return bin2hex(random_bytes(8));
+}
+
+/** Alle in der DB verwalteten Reviewer:innen (ohne Code, nur Metadaten). */
+function list_reviewers(): array
+{
+    return db()->query(
+        'SELECT id, name, is_admin, active, created_at, last_login FROM reviewers ORDER BY active DESC, name COLLATE NOCASE'
+    )->fetchAll();
+}
+
+/** Neue:n Reviewer:in anlegen. Gibt den Klartext-Code zurück (nur jetzt sichtbar). */
+function add_reviewer(string $name, bool $admin): string
+{
+    $name = trim($name);
+    if ($name === '') {
+        $name = 'Reviewer';
+    }
+    $code = gen_code();
+    db()->prepare('INSERT INTO reviewers (code_hash, name, is_admin, active, created_at) VALUES (:h, :n, :a, 1, :ts)')
+        ->execute([':h' => password_hash($code, PASSWORD_DEFAULT), ':n' => $name, ':a' => $admin ? 1 : 0, ':ts' => date('c')]);
+    return $code;
+}
+
+/** Neuen Code für eine:n Reviewer:in erzeugen. Gibt den Klartext-Code zurück oder null. */
+function regen_reviewer_code(int $id): ?string
+{
+    $code = gen_code();
+    $stmt = db()->prepare('UPDATE reviewers SET code_hash = :h WHERE id = :id');
+    $stmt->execute([':h' => password_hash($code, PASSWORD_DEFAULT), ':id' => $id]);
+    return $stmt->rowCount() ? $code : null;
+}
+
+function set_reviewer_active(int $id, bool $active): void
+{
+    db()->prepare('UPDATE reviewers SET active = :a WHERE id = :id')->execute([':a' => $active ? 1 : 0, ':id' => $id]);
+}
+
+function set_reviewer_admin(int $id, bool $admin): void
+{
+    db()->prepare('UPDATE reviewers SET is_admin = :a WHERE id = :id')->execute([':a' => $admin ? 1 : 0, ':id' => $id]);
+}
+
+function delete_reviewer(int $id): void
+{
+    db()->prepare('DELETE FROM reviewers WHERE id = :id')->execute([':id' => $id]);
+}
+
+/* ---- Flash-Nachrichten über einen Redirect hinweg --------------------- */
+
+function flash_set(string $msg, string $type = 'ok'): void
+{
+    $_SESSION['flash'] = ['m' => $msg, 't' => $type];
+}
+
+function flash_get(): ?array
+{
+    $f = $_SESSION['flash'] ?? null;
+    unset($_SESSION['flash']);
+    return $f;
 }
 
 function h(?string $s): string
