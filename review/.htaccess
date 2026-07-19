@@ -1,0 +1,27 @@
+# flowbend Physio-Review – Schutz & kein Indexieren
+
+<IfModule mod_headers.c>
+  Header set X-Robots-Tag "noindex, nofollow"
+</IfModule>
+
+# Datenbank-Dateien nie ausliefern
+<FilesMatch "\.(sqlite|sqlite-wal|sqlite-shm|db)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# Konfiguration mit den Zugangscodes nie ausliefern
+<FilesMatch "^config(\.sample)?\.php$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>

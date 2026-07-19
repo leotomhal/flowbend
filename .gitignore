@@ -11,3 +11,7 @@ Thumbs.db
 node_modules/
 npm-debug.log*
 package-lock.json
+
+# Physio-Review: echte Zugangscodes + Bewertungsdaten nie versionieren
+review/config.php
+review/data/

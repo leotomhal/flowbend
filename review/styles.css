@@ -1,0 +1,110 @@
+:root {
+  --bg: #fcfbfa; --card: #fff; --main: #2c2a29; --sub: #96918e;
+  --warm: #d97736; --light: #fdf6f0; --track: #ece7e2;
+  --good: #3a9d6e; --bad: #d1495b;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg); color: var(--main); line-height: 1.5; }
+h1, h2, h3 { font-weight: 600; }
+small { color: var(--sub); font-weight: 400; font-size: 0.8em; }
+.muted { color: var(--sub); }
+a { color: var(--warm); }
+
+/* Login */
+.login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.login-card { max-width: 360px; width: 100%; text-align: center; }
+.login-card h1 { font-size: 1.6rem; }
+.login-card .sub { color: var(--sub); font-size: 0.9rem; margin: 6px 0 20px; }
+.login-card label { display: block; text-align: left; font-size: 0.85rem; color: var(--sub); margin-bottom: 6px; }
+.login-card input { width: 100%; padding: 13px; border: 1px solid var(--track); border-radius: 14px;
+  font-size: 1rem; margin-bottom: 16px; }
+
+/* Topbar */
+.topbar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 16px;
+  background: var(--card); border-bottom: 1px solid var(--track); padding: 12px 18px; flex-wrap: wrap; }
+.topbar .brand { font-weight: 700; color: var(--warm); }
+.topbar nav { display: flex; gap: 6px; margin-left: auto; }
+.topbar nav a { text-decoration: none; color: var(--sub); font-weight: 600; font-size: 0.9rem;
+  padding: 7px 14px; border-radius: 12px; }
+.topbar nav a.active { background: var(--light); color: var(--warm); }
+.topbar .who { display: flex; align-items: center; gap: 12px; font-size: 0.82rem; color: var(--sub); }
+.inline { display: inline; }
+.link { background: none; border: none; color: var(--warm); cursor: pointer; font-size: 0.82rem; font-weight: 600; }
+
+.wrap { max-width: 720px; margin: 0 auto; padding: 18px; }
+.intro, .flash { max-width: 720px; margin: 14px auto; padding: 0 18px; }
+.intro { color: var(--sub); font-size: 0.9rem; }
+
+.card { background: var(--card); border: 1px solid var(--track); border-radius: 20px; padding: 22px; }
+
+/* Flash */
+.flash { padding: 11px 16px; border-radius: 12px; font-size: 0.9rem; font-weight: 600; }
+.flash.ok { background: #eaf6f0; color: var(--good); max-width: 720px; }
+.flash.err { background: #fbecee; color: var(--bad); }
+
+/* Button */
+.btn { display: inline-block; background: var(--warm); color: #fff; border: none; padding: 13px 20px;
+  border-radius: 14px; font-size: 0.95rem; font-weight: 600; cursor: pointer; text-decoration: none; }
+.btn.ghost { background: transparent; color: var(--warm); border: 1px solid var(--warm); }
+
+/* Pose card */
+.pose { margin-bottom: 16px; }
+.pose-head { display: flex; gap: 16px; margin-bottom: 14px; }
+.thumb { flex: none; border-radius: 14px; overflow: hidden; background: var(--light);
+  display: flex; align-items: center; justify-content: center; }
+.thumb.big { width: 120px; height: 120px; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; }
+.thumb .noimg { color: var(--sub); font-size: 0.62rem; text-align: center; padding: 6px; }
+.pose h3 { font-size: 1.12rem; }
+.cue { font-size: 0.9rem; color: var(--main); margin: 6px 0; }
+.meta { font-size: 0.78rem; color: var(--sub); }
+.meta .mine { color: var(--warm); font-weight: 600; }
+.meta .bad { color: var(--bad); } .meta .good { color: var(--good); }
+
+/* Rating form */
+.rateform { border-top: 1px dashed var(--track); padding-top: 14px; }
+.fields { display: flex; gap: 26px; flex-wrap: wrap; margin-bottom: 12px; }
+.field { display: flex; flex-direction: column; gap: 4px; }
+.flabel { font-size: 0.78rem; color: var(--sub); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.rateform textarea { width: 100%; border: 1px solid var(--track); border-radius: 12px; padding: 10px;
+  font: inherit; font-size: 0.9rem; resize: vertical; margin-bottom: 12px; }
+
+/* Stars (reverse-order trick) */
+.stars { display: inline-flex; flex-direction: row-reverse; align-items: center; gap: 2px; }
+.stars input { position: absolute; opacity: 0; width: 0; height: 0; }
+.stars label { font-size: 1.6rem; color: var(--track); cursor: pointer; line-height: 1; transition: color 0.12s; }
+.stars label.na { font-size: 0.72rem; color: var(--sub); margin-right: 8px; align-self: center; cursor: pointer; }
+.stars label.na input { position: static; opacity: 1; width: auto; height: auto; }
+.stars input:checked ~ label,
+.stars label:hover, .stars label:hover ~ label { color: var(--warm); }
+.stars label.na:hover { color: var(--sub); }
+
+/* Board */
+.summary { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.sbox { flex: 1; min-width: 130px; border-radius: 16px; padding: 16px; text-align: center; background: var(--light); }
+.sbox b { display: block; font-size: 1.8rem; font-weight: 700; }
+.sbox span { font-size: 0.74rem; color: var(--sub); }
+.sbox.todo { background: #fbecee; } .sbox.todo b { color: var(--bad); }
+.sbox.ok { background: #eaf6f0; } .sbox.ok b { color: var(--good); }
+section { margin-bottom: 26px; }
+section h2 { font-size: 1.15rem; margin-bottom: 12px; }
+.row { display: flex; gap: 14px; background: var(--card); border: 1px solid var(--track);
+  border-radius: 16px; padding: 14px; margin-bottom: 10px; }
+.row .thumb { width: 64px; height: 64px; }
+.rowmain { flex: 1; }
+.rowtop { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.score { font-weight: 700; } .score.bad { color: var(--bad); }
+.metrics { font-size: 0.8rem; color: var(--sub); margin: 4px 0 6px; }
+.comment { font-size: 0.85rem; background: var(--light); border-radius: 10px; padding: 7px 10px; margin-top: 5px; }
+.comment .cby { color: var(--sub); font-size: 0.8em; }
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.chip { font-size: 0.8rem; padding: 6px 11px; border-radius: 20px; background: var(--light); color: var(--sub); }
+.chip.ok { background: #eaf6f0; color: var(--good); }
+
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #1a1918; --card: #232120; --main: #f0ece9; --sub: #9a938e; --warm: #e5904a;
+    --light: #2e2621; --track: #37322e; }
+  .flash.ok { background: #1e3329; } .flash.err, .sbox.todo { background: #34222633; }
+  .sbox.todo { background: #3a2529; } .sbox.ok { background: #1e3329; }
+}
