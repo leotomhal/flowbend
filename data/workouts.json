@@ -19,5 +19,11 @@
  ]},
  {"id": "uppercircuit", "meta": "🫱 OBERKÖRPER-ZIRKEL", "rounds": 3, "work": 30, "rest": 15, "exercises": [
    {"poseId": "pushup"}, {"poseId": "tricepDip"}, {"poseId": "inchworm"}, {"poseId": "plank"}
+ ]},
+ {"id": "glutescircuit", "meta": "🍑 PO & BEINE", "rounds": 3, "work": 35, "rest": 15, "exercises": [
+   {"poseId": "sumoSquat"}, {"poseId": "gluteBridge"}, {"poseId": "reverseLunge"}, {"poseId": "gluteKickback"}, {"poseId": "wallSit"}
+ ]},
+ {"id": "coreplus", "meta": "🔥 CORE PLUS", "rounds": 2, "work": 35, "rest": 12, "exercises": [
+   {"poseId": "russianTwist"}, {"poseId": "legRaise"}, {"poseId": "flutterKicks"}, {"poseId": "plankShoulderTap"}, {"poseId": "hollowHold"}
  ]}
 ]
