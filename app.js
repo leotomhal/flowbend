@@ -35,7 +35,8 @@ const BILATERAL = new Set([
   "warrior1", "warrior2", "tree", "halfMoon", "quadStretch", "lateralLunge",
   "sideStretch", "standingSideReach", "standingTwist", "neckStretch", "lowLunge",
   "gatePose", "threadNeedle", "birdDog", "seatedTwist", "seatedSideStretch",
-  "seatedNeckStretch", "headToKnee", "cowFaceArms", "eaglePrep", "lyingTwist", "sidePlank"
+  "seatedNeckStretch", "headToKnee", "cowFaceArms", "eaglePrep", "lyingTwist", "sidePlank",
+  "reverseLunge", "gluteKickback"
 ]);
 
 // Auswahl der Bereiche fürs Dashboard (deutsches Label -> focus-Tag).
